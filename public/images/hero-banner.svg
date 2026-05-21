@@ -1,0 +1,15 @@
+<svg width="1200" height="500" viewBox="0 0 1200 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="500" rx="40" fill="#111827"/>
+  <circle cx="954" cy="146" r="140" fill="#FACC15" fill-opacity="0.18"/>
+  <circle cx="1045" cy="373" r="120" fill="#F97316" fill-opacity="0.15"/>
+  <rect x="70" y="70" width="300" height="42" rx="21" fill="#FACC15"/>
+  <text x="90" y="98" fill="#111827" font-size="22" font-family="Arial">AK General Store</text>
+  <text x="70" y="190" fill="#FFFDF4" font-size="62" font-family="Arial" font-weight="700">Daily Grocery</text>
+  <text x="70" y="255" fill="#FFFDF4" font-size="62" font-family="Arial" font-weight="700">Best Price</text>
+  <text x="70" y="320" fill="#D1D5DB" font-size="24" font-family="Arial">Fresh staples, same-day delivery, trusted local service.</text>
+  <rect x="70" y="360" width="230" height="60" rx="18" fill="#F97316"/>
+  <text x="105" y="398" fill="white" font-size="26" font-family="Arial">Shop Now</text>
+  <rect x="690" y="110" width="200" height="250" rx="32" fill="#FFFDF4"/>
+  <rect x="760" y="86" width="200" height="280" rx="32" fill="#FFE28A"/>
+  <rect x="860" y="128" width="220" height="240" rx="32" fill="#FFC76A"/>
+</svg>
