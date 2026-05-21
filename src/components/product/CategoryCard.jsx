@@ -8,7 +8,7 @@ export default function CategoryCard({ category }) {
     >
       <div className={`h-14 w-14 overflow-hidden rounded-2xl bg-gradient-to-br ${category.color}`}>
         {category.imageUrl ? (
-          <img src={category.imageUrl} alt={category.name} className="h-full w-full object-cover" />
+          <img src={category.imageUrl} alt={category.name} loading="lazy" className="h-full w-full object-cover" />
         ) : null}
       </div>
       <h3 className="mt-3 text-sm font-bold text-slate-900">{category.name}</h3>

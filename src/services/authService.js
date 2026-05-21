@@ -1,4 +1,4 @@
-import { apiFetch } from "./api";
+import { API_BASE_URL, apiFetch } from "./api";
 
 function mapRole(role = "CUSTOMER") {
   const value = String(role).toUpperCase();
@@ -14,6 +14,14 @@ function mapRole(role = "CUSTOMER") {
   return "user";
 }
 
+function normalizeAssetUrl(value) {
+  if (!value || typeof value !== "string") {
+    return null;
+  }
+
+  return value.startsWith("/") ? `${API_BASE_URL}${value}` : value;
+}
+
 function mapAuthPayload(payload = {}) {
   return {
     token: payload.token || null,
@@ -24,7 +32,7 @@ function mapAuthPayload(payload = {}) {
     emailVerified: Boolean(payload.emailVerified),
     blocked: Boolean(payload.blocked),
     userId: Number(payload.userId || 1),
-    avatar: payload.avatar || null,
+    avatar: normalizeAssetUrl(payload.avatar),
   };
 }
 
@@ -150,4 +158,22 @@ export async function loginDelivery({ phone, password }) {
   }
 
   return payload;
+}
+
+export async function uploadProfileAvatar(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await apiFetch("/api/auth/profile/avatar", {
+    method: "POST",
+    body: formData,
+  });
+
+  return normalizeAssetUrl(response.data?.imageUrl || "");
+}
+
+export async function removeProfileAvatar() {
+  await apiFetch("/api/auth/profile/avatar", {
+    method: "DELETE",
+  });
 }

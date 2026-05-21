@@ -51,6 +51,7 @@ export default function ProductCard({ product }) {
           <img
             src={product.imageUrl}
             alt={product.name}
+            loading="lazy"
             className="h-full w-full rounded-[0.95rem] object-cover shadow-sm"
             onError={(event) => {
               event.currentTarget.onerror = null;
@@ -61,6 +62,7 @@ export default function ProductCard({ product }) {
           <img
             src={getFallbackProductImage(product)}
             alt={product.name}
+            loading="lazy"
             className="h-full w-full rounded-[0.95rem] object-cover shadow-sm"
           />
         )}

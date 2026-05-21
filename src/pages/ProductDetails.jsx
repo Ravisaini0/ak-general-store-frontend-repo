@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import BackButton from "../components/common/BackButton";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
+import SeoHead from "../components/common/SeoHead";
 import TopBar from "../components/common/TopBar";
 import Button from "../components/common/Button";
 import { useAuth } from "../context/AuthContext";
@@ -124,6 +125,10 @@ export default function ProductDetails() {
 
   return (
     <div className="page-shell">
+      <SeoHead
+        title={`${product.name} | AK General Store`}
+        description={`${product.description} Order ${product.name} from AK General Store with secure checkout, live order tracking, and fast local delivery.`}
+      />
       <TopBar />
       <Header />
       <main className="store-shell py-6">

@@ -16,6 +16,7 @@ export default function Register() {
     phone: "",
     password: "",
   });
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
   const redirectTo = location.state?.from?.pathname || "/";
 
@@ -39,6 +40,11 @@ export default function Register() {
 
     if (!isValidPhone(form.phone)) {
       setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    if (!consentAccepted) {
+      setError("Please accept the Privacy Policy and Terms & Conditions to continue.");
       return;
     }
 
@@ -77,6 +83,29 @@ export default function Register() {
           <input className="store-input md:col-span-2" placeholder="Email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} />
           <PasswordField className="md:col-span-2" placeholder="Password" value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" />
         </div>
+        <label className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={consentAccepted}
+            onChange={(event) => setConsentAccepted(event.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-slate-300 accent-yellow-400"
+          />
+          <span>
+            I accept the{" "}
+            <Link to="/privacy-policy" className="font-bold text-slate-900">
+              Privacy Policy
+            </Link>
+            ,{" "}
+            <Link to="/terms-and-conditions" className="font-bold text-slate-900">
+              Terms & Conditions
+            </Link>
+            , and{" "}
+            <Link to="/return-refund-policy" className="font-bold text-slate-900">
+              Return / Refund Policy
+            </Link>
+            .
+          </span>
+        </label>
         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         <Button variant="accent" className="mt-6 w-full py-4 font-black" type="submit">
           Register

@@ -12,6 +12,7 @@ export default function Login() {
   const location = useLocation();
   const { session } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
   const redirectTo = location.state?.from?.pathname || "/";
   const loginMessage = location.state?.loginMessage || "";
@@ -37,6 +38,11 @@ export default function Login() {
 
     if (!isValidEmail(form.email)) {
       setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!consentAccepted) {
+      setError("Please accept the Privacy Policy and Terms & Conditions to continue.");
       return;
     }
 
@@ -87,6 +93,25 @@ export default function Login() {
             value={form.password}
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
           />
+          <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={consentAccepted}
+              onChange={(event) => setConsentAccepted(event.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-slate-300 accent-yellow-400"
+            />
+            <span>
+              I accept the{" "}
+              <Link to="/privacy-policy" className="font-bold text-slate-900">
+                Privacy Policy
+              </Link>{" "}
+              and{" "}
+              <Link to="/terms-and-conditions" className="font-bold text-slate-900">
+                Terms & Conditions
+              </Link>
+              .
+            </span>
+          </label>
         </div>
         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         <Button variant="accent" className="mt-6 w-full py-4 font-black" type="submit">

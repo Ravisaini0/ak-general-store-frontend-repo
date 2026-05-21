@@ -1,12 +1,14 @@
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
-import DeliveryLogin from "../pages/delivery/DeliveryLogin";
-import DeliveryDashboard from "../pages/delivery/DeliveryDashboard";
-import AssignedOrders from "../pages/delivery/AssignedOrders";
-import DeliveryOrderDetails from "../pages/delivery/DeliveryOrderDetails";
-import DeliveryTracking from "../pages/delivery/DeliveryTracking";
-import DeliveryEarnings from "../pages/delivery/DeliveryEarnings";
-import DeliveryProfile from "../pages/delivery/DeliveryProfile";
+
+const DeliveryLogin = lazy(() => import("../pages/delivery/DeliveryLogin"));
+const DeliveryDashboard = lazy(() => import("../pages/delivery/DeliveryDashboard"));
+const AssignedOrders = lazy(() => import("../pages/delivery/AssignedOrders"));
+const DeliveryOrderDetails = lazy(() => import("../pages/delivery/DeliveryOrderDetails"));
+const DeliveryTracking = lazy(() => import("../pages/delivery/DeliveryTracking"));
+const DeliveryEarnings = lazy(() => import("../pages/delivery/DeliveryEarnings"));
+const DeliveryProfile = lazy(() => import("../pages/delivery/DeliveryProfile"));
 
 export default function DeliveryRoutes() {
   return (

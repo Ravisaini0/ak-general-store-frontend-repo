@@ -6,6 +6,7 @@ import Modal from "./Modal";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_SCRIPT_ID = "ak-google-maps-script";
+const GOOGLE_MAPS_CALLBACK = "__akInitGoogleMaps";
 const DEFAULT_CENTER = { latitude: 28.016278, longitude: 74.964194 };
 
 function normalizeQuery(query) {
@@ -102,7 +103,7 @@ function loadGoogleMapsScript() {
       return;
     }
 
-    if (window.google?.maps?.places) {
+    if (window.google?.maps) {
       resolve(window.google);
       return;
     }
@@ -118,12 +119,13 @@ function loadGoogleMapsScript() {
       return;
     }
 
+    window[GOOGLE_MAPS_CALLBACK] = () => resolve(window.google);
+
     const script = document.createElement("script");
     script.id = GOOGLE_MAPS_SCRIPT_ID;
     script.async = true;
     script.defer = true;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-    script.onload = () => resolve(window.google);
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&loading=async&v=weekly&callback=${GOOGLE_MAPS_CALLBACK}`;
     script.onerror = () => reject(new Error("Google Maps could not be loaded."));
     document.body.appendChild(script);
   });
@@ -171,7 +173,6 @@ export default function LocationPickerModal({
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
   const geocoderRef = useRef(null);
-  const autocompleteRef = useRef(null);
   const googleEnabledRef = useRef(false);
 
   const [search, setSearch] = useState("");
@@ -282,7 +283,7 @@ export default function LocationPickerModal({
           return;
         }
 
-        if (!google?.maps?.places || !mapRef.current) {
+        if (!google?.maps || !mapRef.current) {
           setGoogleAvailable(false);
           setGoogleReady(false);
           googleEnabledRef.current = false;
@@ -292,23 +293,23 @@ export default function LocationPickerModal({
         googleEnabledRef.current = true;
         setGoogleAvailable(true);
         setGoogleReady(true);
-        autocompleteRef.current = new google.maps.places.AutocompleteService();
-        geocoderRef.current = new google.maps.Geocoder();
+        geocoderRef.current =
+          typeof google.maps.Geocoder === "function" ? new google.maps.Geocoder() : null;
 
-        if (!mapInstanceRef.current) {
-          mapInstanceRef.current = new google.maps.Map(mapRef.current, {
-            center: mapCenter,
-            zoom: selectedLocation ? 16 : 13,
-            disableDefaultUI: true,
-            zoomControl: true,
-            clickableIcons: false,
-            gestureHandling: "greedy",
-          });
+        mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+          center: mapCenter,
+          zoom: selectedLocation ? 16 : 13,
+          disableDefaultUI: true,
+          zoomControl: true,
+          clickableIcons: false,
+          gestureHandling: "greedy",
+        });
 
-          mapInstanceRef.current.addListener("click", async (event) => {
-            await handleMapSelection(event.latLng.lat(), event.latLng.lng());
-          });
-        }
+        mapInstanceRef.current.addListener("click", async (event) => {
+          await handleMapSelection(event.latLng.lat(), event.latLng.lng());
+        });
+
+        markerRef.current = null;
 
         updateMarker(
           google,
@@ -337,8 +338,10 @@ export default function LocationPickerModal({
 
     return () => {
       cancelled = true;
+      markerRef.current = null;
+      mapInstanceRef.current = null;
     };
-  }, [defaultLabel, mapCenter, open, selectedLocation]);
+  }, [defaultLabel, mapCenter, open]);
 
   useEffect(() => {
     if (!open) {
@@ -355,45 +358,12 @@ export default function LocationPickerModal({
         setSearching(true);
         setError("");
 
-        if (googleEnabledRef.current && autocompleteRef.current) {
-          const predictions = await new Promise((resolve, reject) => {
-            autocompleteRef.current.getPlacePredictions(
-              {
-                input: search.trim(),
-                componentRestrictions: { country: "in" },
-              },
-              (items, status) => {
-                if (
-                  status !== window.google.maps.places.PlacesServiceStatus.OK &&
-                  status !== window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS
-                ) {
-                  reject(new Error("Google location suggestions are unavailable right now."));
-                  return;
-                }
-
-                resolve(items || []);
-              }
-            );
-          });
-
-          const nextResults = predictions.map((item) => ({
-            placeId: item.place_id,
-            label: item.description,
-          }));
-
-          if (nextResults.length) {
-            setResults(nextResults);
-            return;
-          }
-
-          if (geocoderRef.current) {
-            const geocodedMatches = await geocodeAddressWithGoogle(geocoderRef.current, search.trim());
+        if (googleEnabledRef.current && geocoderRef.current) {
+          const geocodedMatches = await geocodeAddressWithGoogle(geocoderRef.current, search.trim());
+          if (geocodedMatches.length) {
             setResults(geocodedMatches);
             return;
           }
-
-          setResults([]);
-          return;
         }
 
         const matches = await fallbackSearchLocations(search);
@@ -438,46 +408,6 @@ export default function LocationPickerModal({
         }
       }
 
-      if (googleEnabledRef.current && autocompleteRef.current) {
-        autocompleteRef.current.getPlacePredictions(
-          {
-            input: search.trim(),
-            componentRestrictions: { country: "in" },
-          },
-          (items) => {
-            const predictionResults = (items || []).map((item) => ({
-              placeId: item.place_id,
-              label: item.description,
-            }));
-
-            if (predictionResults.length) {
-              setResults(predictionResults);
-              setSearching(false);
-              return;
-            }
-
-            fallbackSearchLocations(search.trim())
-              .then((fallbackMatches) => {
-                if (!fallbackMatches.length) {
-                  setError("No matching location found. Try a more specific delivery address.");
-                  setResults([]);
-                } else {
-                  setResults(fallbackMatches);
-                  setSelectedLocation(fallbackMatches[0]);
-                }
-              })
-              .catch((fallbackError) => {
-                setResults([]);
-                setError(fallbackError.message || "Location search failed.");
-              })
-              .finally(() => {
-                setSearching(false);
-              });
-          }
-        );
-        return;
-      }
-
       const matches = await fallbackSearchLocations(search);
       if (!matches.length) {
         throw new Error("No matching location found. Try a more specific delivery address.");
@@ -495,27 +425,6 @@ export default function LocationPickerModal({
   const handleSelectResult = async (item) => {
     try {
       setError("");
-
-      if (item.placeId && googleEnabledRef.current && geocoderRef.current) {
-        const resolved = await new Promise((resolve, reject) => {
-          geocoderRef.current.geocode({ placeId: item.placeId }, (geocodeResults, status) => {
-            if (status !== "OK" || !geocodeResults?.length) {
-              reject(new Error("This location could not be opened on the map."));
-              return;
-            }
-
-            const result = geocodeResults[0];
-            resolve({
-              latitude: result.geometry.location.lat(),
-              longitude: result.geometry.location.lng(),
-              label: result.formatted_address,
-            });
-          });
-        });
-
-        setSelectedLocation(resolved);
-        return;
-      }
 
       setSelectedLocation(item);
     } catch (selectionError) {
@@ -558,14 +467,6 @@ export default function LocationPickerModal({
   return (
     <Modal open={open} title={title} onClose={onClose}>
       <div className="space-y-4">
-        <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm font-black text-slate-900">Set the exact delivery spot</p>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Search the delivery address just like a real grocery app. You can drag the map pin,
-            tap the map, or use your live location.
-          </p>
-        </div>
-
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-3">
           <div className="flex items-center gap-3 rounded-[1.2rem] border border-slate-200 px-4 py-3">
             <Search size={18} className="text-slate-400" />
@@ -582,9 +483,6 @@ export default function LocationPickerModal({
               }}
             />
           </div>
-          <p className="mt-3 px-1 text-xs text-slate-500">
-            Start typing area, landmark, apartment, office, city, or pincode.
-          </p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
             <Button
               variant="accent"
@@ -608,17 +506,13 @@ export default function LocationPickerModal({
         {googleAvailable ? (
           <div className="overflow-hidden rounded-[1.6rem] border border-slate-200 bg-slate-100">
             <div ref={mapRef} className="h-[280px] w-full" />
-            <div className="border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500">
-              Tap anywhere on the map or drag the marker to fine-tune the delivery location.
-            </div>
+            {googleReady ? (
+              <div className="border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500">
+                Tap anywhere on the map or drag the marker to fine-tune the delivery location.
+              </div>
+            ) : null}
           </div>
-        ) : (
-          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            Google Maps preview will appear automatically after you add
-            <code className="mx-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs">VITE_GOOGLE_MAPS_API_KEY</code>
-            to the frontend environment. Search and current-location selection still work.
-          </div>
-        )}
+        ) : null}
 
         {loadingMap ? (
           <div className="flex items-center gap-2 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">

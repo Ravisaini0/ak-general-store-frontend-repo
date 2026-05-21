@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const AuthContext = createContext(null);
 const SESSION_STORAGE_KEY = "ak-general-store-session";
-const PROFILE_STORAGE_KEY = "ak-general-store-profiles";
+const MAX_STORED_AVATAR_LENGTH = 180000;
 
 function normalizeRole(role = "user") {
   const value = String(role).toLowerCase();
@@ -14,57 +14,27 @@ function normalizeRole(role = "user") {
   return value;
 }
 
-function getProfileKey(payload = {}) {
-  const userId = Number(payload?.userId || 0);
-  if (userId) {
-    return `user:${userId}`;
+function sanitizeAvatar(avatar) {
+  if (typeof avatar !== "string") {
+    return null;
   }
 
-  if (payload?.email) {
-    return `email:${String(payload.email).toLowerCase()}`;
+  const trimmedAvatar = avatar.trim();
+  if (!trimmedAvatar) {
+    return null;
   }
 
-  if (payload?.phone) {
-    return `phone:${String(payload.phone)}`;
-  }
-
-  return "";
+  return trimmedAvatar.length <= MAX_STORED_AVATAR_LENGTH ? trimmedAvatar : null;
 }
 
-function readStoredProfiles() {
-  if (typeof window === "undefined") {
-    return {};
+function createPersistedSession(session) {
+  if (!session || typeof session !== "object") {
+    return null;
   }
-
-  try {
-    const rawValue = window.localStorage.getItem(PROFILE_STORAGE_KEY);
-    return rawValue ? JSON.parse(rawValue) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeStoredProfiles(profiles) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
-}
-
-function mergeStoredProfile(payload = {}) {
-  const profileKey = getProfileKey(payload);
-  if (!profileKey) {
-    return payload;
-  }
-
-  const storedProfiles = readStoredProfiles();
-  const storedProfile = storedProfiles[profileKey] || {};
 
   return {
-    ...payload,
-    ...storedProfile,
-    avatar: storedProfile.avatar || payload.avatar || null,
+    ...session,
+    avatar: sanitizeAvatar(session.avatar),
   };
 }
 
@@ -76,14 +46,14 @@ export function AuthProvider({ children }) {
 
     try {
       const storedValue = window.localStorage.getItem(SESSION_STORAGE_KEY);
-      return storedValue ? mergeStoredProfile(JSON.parse(storedValue)) : null;
+      return storedValue ? createPersistedSession(JSON.parse(storedValue)) : null;
     } catch {
       return null;
     }
   });
 
   const login = (role, payload) => {
-    const nextSession = mergeStoredProfile({
+    const nextSession = {
       role: normalizeRole(role),
       name: payload?.name || "AK User",
       email: payload?.email || "",
@@ -92,10 +62,18 @@ export function AuthProvider({ children }) {
       avatar: payload?.avatar || null,
       phone: payload?.phone || null,
       blocked: Boolean(payload?.blocked),
-    });
+    };
 
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession));
+      try {
+        window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(createPersistedSession(nextSession)));
+      } catch {
+        try {
+          window.localStorage.removeItem(SESSION_STORAGE_KEY);
+        } catch {
+          // Ignore storage failures and continue with in-memory state.
+        }
+      }
     }
 
     setSession(nextSession);
@@ -112,26 +90,10 @@ export function AuthProvider({ children }) {
   const updateProfile = (payload) => {
     setSession((current) =>
       current
-        ? (() => {
-            const nextSession = {
-              ...current,
-              ...payload,
-            };
-
-            const profileKey = getProfileKey(nextSession);
-            if (profileKey) {
-              const storedProfiles = readStoredProfiles();
-              writeStoredProfiles({
-                ...storedProfiles,
-                [profileKey]: {
-                  ...(storedProfiles[profileKey] || {}),
-                  avatar: nextSession.avatar || null,
-                },
-              });
-            }
-
-            return nextSession;
-          })()
+        ? {
+            ...current,
+            ...payload,
+          }
         : current
     );
   };
@@ -146,13 +108,29 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    try {
+      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(createPersistedSession(session)));
+    } catch {
+      try {
+        window.localStorage.setItem(
+          SESSION_STORAGE_KEY,
+          JSON.stringify({
+            ...createPersistedSession(session),
+            avatar: null,
+          })
+        );
+      } catch {
+        // Ignore storage failures and continue with in-memory state.
+      }
+    }
   }, [session]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
       return undefined;
     }
+
+    window.localStorage.removeItem("ak-general-store-profiles");
 
     const handleExpiredSession = () => {
       setSession(null);

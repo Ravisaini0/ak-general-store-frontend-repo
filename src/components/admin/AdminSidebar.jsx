@@ -1,4 +1,4 @@
-import { BarChart3, Boxes, ClipboardList, LayoutDashboard, LogOut, Settings, Shapes, Truck, Users, TicketPercent } from "lucide-react";
+import { BarChart3, Boxes, ClipboardList, LayoutDashboard, LogOut, Settings, Shapes, TicketPercent, Truck, Users, Wheat } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -7,6 +7,7 @@ const links = [
   { label: "Products", to: "/admin/products", icon: Boxes },
   { label: "Categories", to: "/admin/categories", icon: Shapes },
   { label: "Orders", to: "/admin/orders", icon: ClipboardList },
+  { label: "Fresh Flour", to: "/admin/chakki-bookings", icon: Wheat },
   { label: "Customers", to: "/admin/customers", icon: Users },
   { label: "Delivery Team", to: "/admin/delivery-boys", icon: Truck },
   { label: "Coupons", to: "/admin/coupons", icon: TicketPercent },

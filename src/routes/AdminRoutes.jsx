@@ -1,15 +1,18 @@
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
-import AdminLogin from "../pages/admin/AdminLogin";
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import ManageProducts from "../pages/admin/ManageProducts";
-import ManageCategories from "../pages/admin/ManageCategories";
-import ManageOrders from "../pages/admin/ManageOrders";
-import ManageCustomers from "../pages/admin/ManageCustomers";
-import ManageDeliveryBoys from "../pages/admin/ManageDeliveryBoys";
-import Coupons from "../pages/admin/Coupons";
-import Reports from "../pages/admin/Reports";
-import AdminSettings from "../pages/admin/AdminSettings";
+
+const AdminLogin = lazy(() => import("../pages/admin/AdminLogin"));
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
+const ManageProducts = lazy(() => import("../pages/admin/ManageProducts"));
+const ManageCategories = lazy(() => import("../pages/admin/ManageCategories"));
+const ManageOrders = lazy(() => import("../pages/admin/ManageOrders"));
+const ManageChakkiBookings = lazy(() => import("../pages/admin/ManageChakkiBookings"));
+const ManageCustomers = lazy(() => import("../pages/admin/ManageCustomers"));
+const ManageDeliveryBoys = lazy(() => import("../pages/admin/ManageDeliveryBoys"));
+const Coupons = lazy(() => import("../pages/admin/Coupons"));
+const Reports = lazy(() => import("../pages/admin/Reports"));
+const AdminSettings = lazy(() => import("../pages/admin/AdminSettings"));
 
 export default function AdminRoutes() {
   return (
@@ -20,6 +23,7 @@ export default function AdminRoutes() {
         <Route path="/products" element={<ManageProducts />} />
         <Route path="/categories" element={<ManageCategories />} />
         <Route path="/orders" element={<ManageOrders />} />
+        <Route path="/chakki-bookings" element={<ManageChakkiBookings />} />
         <Route path="/customers" element={<ManageCustomers />} />
         <Route path="/delivery-boys" element={<ManageDeliveryBoys />} />
         <Route path="/coupons" element={<Coupons />} />

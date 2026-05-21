@@ -5,8 +5,8 @@ export default function TopBar() {
     { icon: BadgePercent, label: "Welcome to A K General Store" },
     { icon: Clock3, label: "Support available 24/7" },
     { icon: BadgePercent, label: "Free Delivery above Rs299" },
-    { icon: CircleHelp, label: "Fresh Flour Service Available" },
     { icon: Phone, label: "Need Help? 9483989109" },
+    { icon: CircleHelp, label: "Fresh Flour Service Available" },
   ];
 
   return (

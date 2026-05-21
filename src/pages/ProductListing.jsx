@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
+import SeoHead from "../components/common/SeoHead";
 import TopBar from "../components/common/TopBar";
 import BottomCartBar from "../components/cart/BottomCartBar";
 import ProductGrid from "../components/product/ProductGrid";
@@ -63,6 +64,18 @@ export default function ProductListing() {
 
   return (
     <div className="page-shell">
+      <SeoHead
+        title={
+          search
+            ? `Search "${search}" | AK General Store`
+            : `${category?.name || "All Products"} | AK General Store`
+        }
+        description={
+          search
+            ? `Browse grocery search results for ${search} on AK General Store with fast local ordering and secure checkout.`
+            : `Browse ${category?.name || "all grocery"} products on AK General Store including daily essentials, pantry staples, and trusted household items.`
+        }
+      />
       <TopBar />
       <Header />
       <main className="store-shell py-6">

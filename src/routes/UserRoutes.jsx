@@ -1,22 +1,28 @@
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
-import Home from "../pages/user/Home";
-import Login from "../pages/user/Login";
-import Register from "../pages/user/Register";
-import ProductListing from "../pages/user/ProductListing";
-import ProductDetails from "../pages/user/ProductDetails";
-import Cart from "../pages/user/Cart";
-import Checkout from "../pages/user/Checkout";
-import OrderSuccess from "../pages/user/OrderSuccess";
-import MyOrders from "../pages/user/MyOrders";
-import OrderTracking from "../pages/user/OrderTracking";
-import Profile from "../pages/user/Profile";
-import AddressBook from "../pages/user/AddressBook";
-import Wishlist from "../pages/user/Wishlist";
-import ForgotPassword from "../pages/user/ForgotPassword";
-import OtpVerify from "../pages/user/OtpVerify";
-import AataChakkiBooking from "../pages/user/AataChakkiBooking";
-import Offers from "../pages/user/Offers";
+
+const Home = lazy(() => import("../pages/user/Home"));
+const Login = lazy(() => import("../pages/user/Login"));
+const Register = lazy(() => import("../pages/user/Register"));
+const ProductListing = lazy(() => import("../pages/user/ProductListing"));
+const ProductDetails = lazy(() => import("../pages/user/ProductDetails"));
+const Cart = lazy(() => import("../pages/user/Cart"));
+const Checkout = lazy(() => import("../pages/user/Checkout"));
+const OrderSuccess = lazy(() => import("../pages/user/OrderSuccess"));
+const MyOrders = lazy(() => import("../pages/user/MyOrders"));
+const OrderTracking = lazy(() => import("../pages/user/OrderTracking"));
+const Profile = lazy(() => import("../pages/user/Profile"));
+const AddressBook = lazy(() => import("../pages/user/AddressBook"));
+const Wishlist = lazy(() => import("../pages/user/Wishlist"));
+const ForgotPassword = lazy(() => import("../pages/user/ForgotPassword"));
+const OtpVerify = lazy(() => import("../pages/user/OtpVerify"));
+const AataChakkiBooking = lazy(() => import("../pages/user/AataChakkiBooking"));
+const Offers = lazy(() => import("../pages/user/Offers"));
+const AboutUs = lazy(() => import("../pages/user/AboutUs"));
+const PrivacyPolicy = lazy(() => import("../pages/user/PrivacyPolicy"));
+const TermsConditions = lazy(() => import("../pages/user/TermsConditions"));
+const ReturnRefundPolicy = lazy(() => import("../pages/user/ReturnRefundPolicy"));
 
 export default function UserRoutes() {
   return (
@@ -27,6 +33,10 @@ export default function UserRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/otp-verify" element={<OtpVerify />} />
       <Route path="/offers" element={<Offers />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-and-conditions" element={<TermsConditions />} />
+      <Route path="/return-refund-policy" element={<ReturnRefundPolicy />} />
       <Route path="/products" element={<ProductListing />} />
       <Route path="/category/:slug" element={<ProductListing />} />
       <Route path="/product/:id" element={<ProductDetails />} />
