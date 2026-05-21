@@ -8,5 +8,6 @@ dist/
 *-dom*.txt
 *-shot*.png
 *.html
+!index.html
 
 .vercel
