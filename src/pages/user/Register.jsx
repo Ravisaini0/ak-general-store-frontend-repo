@@ -18,6 +18,7 @@ export default function Register() {
   });
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const redirectTo = location.state?.from?.pathname || "/";
 
   if (session?.role === "user") {
@@ -26,6 +27,7 @@ export default function Register() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError("");
 
     const fieldErrors = validateRequiredFields(form, ["name", "email", "phone", "password"]);
     if (Object.keys(fieldErrors).length) {
@@ -49,6 +51,7 @@ export default function Register() {
     }
 
     try {
+      setIsSubmitting(true);
       const otpPayload = await requestRegistrationOtp(form.email);
 
       window.sessionStorage.setItem(
@@ -68,7 +71,14 @@ export default function Register() {
         },
       });
     } catch (requestError) {
-      setError(requestError.message || "OTP could not be generated.");
+      const rawMessage = String(requestError?.message || "");
+      if (rawMessage.toLowerCase().includes("mail server connection failed")) {
+        setError("We could not send the OTP email right now. Please try again in a moment.");
+      } else {
+        setError(rawMessage || "OTP could not be generated.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,9 +116,10 @@ export default function Register() {
             .
           </span>
         </label>
+        {isSubmitting ? <p className="mt-4 text-sm font-semibold text-amber-700">Sending OTP to your email...</p> : null}
         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-        <Button variant="accent" className="mt-6 w-full py-4 font-black" type="submit">
-          Register
+        <Button variant="accent" className="mt-6 w-full py-4 font-black" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Sending OTP..." : "Register"}
         </Button>
         <p className="mt-4 text-sm text-slate-500">
           Already have an account? <Link to="/login" className="font-bold text-slate-900">Login</Link>
