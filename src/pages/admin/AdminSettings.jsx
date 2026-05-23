@@ -12,45 +12,84 @@ const emptyShop = {
   mapUrl: "",
 };
 
+function normalizeSettingsPayload(payload = {}) {
+  return {
+    storeName: payload.storeName || "",
+    supportPhone: payload.supportPhone || "",
+    supportEmail: payload.supportEmail || "",
+    freeDeliveryThreshold: payload.freeDeliveryThreshold || "",
+    deliveryCharge: payload.deliveryCharge || "",
+    enabledPayments: payload.enabledPayments || "",
+    serviceRadiusKm: payload.serviceRadiusKm || "25",
+    storeLocations: payload.storeLocations || "",
+    upiMerchantName: payload.upiMerchantName || "",
+    upiId: payload.upiId || "",
+    deliveryBasePayoutAmount: payload.deliveryBasePayoutAmount || "20",
+    deliveryAdditionalPayoutAmount: payload.deliveryAdditionalPayoutAmount || "10",
+  };
+}
+
+function normalizeShopPayload(shop = {}) {
+  return {
+    name: String(shop.name || ""),
+    latitude: String(shop.latitude ?? ""),
+    longitude: String(shop.longitude ?? ""),
+    radiusKm: String(shop.radiusKm ?? "25"),
+    mapUrl: String(shop.mapUrl || ""),
+  };
+}
+
 export default function AdminSettings() {
-  const [form, setForm] = useState({
-    storeName: "",
-    supportPhone: "",
-    supportEmail: "",
-    freeDeliveryThreshold: "",
-    deliveryCharge: "",
-    enabledPayments: "",
-    serviceRadiusKm: "25",
-    storeLocations: "",
-    upiMerchantName: "",
-    upiId: "",
-    deliveryBasePayoutAmount: "20",
-    deliveryAdditionalPayoutAmount: "10",
-  });
+  const [form, setForm] = useState(normalizeSettingsPayload());
+  const [savedForm, setSavedForm] = useState(normalizeSettingsPayload());
   const [shops, setShops] = useState([]);
+  const [savedShops, setSavedShops] = useState([]);
   const [shopForm, setShopForm] = useState(emptyShop);
   const [editingShopIndex, setEditingShopIndex] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isSavingShop, setIsSavingShop] = useState(false);
+  const [deletingShopIndex, setDeletingShopIndex] = useState(null);
   const [error, setError] = useState("");
   const [savedMessage, setSavedMessage] = useState("");
+  const [lastSavedAt, setLastSavedAt] = useState("");
 
   useEffect(() => {
     async function loadSettings() {
+      setIsLoading(true);
       try {
         const settings = await fetchAdminSettings();
+        const normalizedSettings = normalizeSettingsPayload(settings);
         const parsedShops = parseStoreLocations(
-          settings.storeLocations || "",
-          Number(settings.serviceRadiusKm || 25)
+          normalizedSettings.storeLocations || "",
+          Number(normalizedSettings.serviceRadiusKm || 25)
         );
-        setForm(settings);
+        setForm(normalizedSettings);
+        setSavedForm(normalizedSettings);
         setShops(parsedShops);
+        setSavedShops(parsedShops);
         setShopForm((current) => ({ ...current, radiusKm: settings.serviceRadiusKm || "25" }));
+        setError("");
       } catch (loadError) {
         setError(loadError.message || "Settings could not be loaded.");
+      } finally {
+        setIsLoading(false);
       }
     }
 
     loadSettings();
   }, []);
+
+  const hasUnsavedSettings =
+    JSON.stringify(form) !== JSON.stringify(savedForm) ||
+    JSON.stringify(shops) !== JSON.stringify(savedShops);
+
+  const hasUnsavedShopDraft = JSON.stringify(normalizeShopPayload(shopForm)) !== JSON.stringify(normalizeShopPayload({
+    ...emptyShop,
+    radiusKm: editingShopIndex !== null
+      ? String(shops[editingShopIndex]?.radiusKm ?? form.serviceRadiusKm ?? "25")
+      : String(form.serviceRadiusKm || "25"),
+  }));
 
   const syncStoreLocations = (nextShops, nextRadius = form.serviceRadiusKm) => {
     setShops(nextShops);
@@ -70,20 +109,36 @@ export default function AdminSettings() {
     };
 
     const updated = await updateAdminSettings(payload);
+    const normalizedUpdated = normalizeSettingsPayload(updated);
     const parsedShops = parseStoreLocations(
-      updated.storeLocations || "",
-      Number(updated.serviceRadiusKm || 25)
+      normalizedUpdated.storeLocations || "",
+      Number(normalizedUpdated.serviceRadiusKm || 25)
     );
-    setForm(updated);
+    setForm(normalizedUpdated);
+    setSavedForm(normalizedUpdated);
     setShops(parsedShops);
+    setSavedShops(parsedShops);
     setSavedMessage(successMessage);
+    setLastSavedAt(new Date().toLocaleString());
     setError("");
-    return { updated, parsedShops };
+    return { updated: normalizedUpdated, parsedShops };
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (isSavingSettings || isLoading) {
+      return;
+    }
+
+    if (!hasUnsavedSettings) {
+      setSavedMessage("Settings are already up to date.");
+      setError("");
+      return;
+    }
+
     try {
+      setIsSavingSettings(true);
+      setSavedMessage("");
       await persistSettings(
         {
           ...form,
@@ -93,10 +148,17 @@ export default function AdminSettings() {
       );
     } catch (saveError) {
       setError(saveError.message || "Settings could not be saved.");
+      setSavedMessage("");
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
   const handleSaveShop = async () => {
+    if (isSavingShop || isLoading) {
+      return;
+    }
+
     if (!shopForm.name || !shopForm.latitude || !shopForm.longitude) {
       setError("Please enter shop name, latitude, and longitude.");
       return;
@@ -116,6 +178,8 @@ export default function AdminSettings() {
     }
 
     try {
+      setIsSavingShop(true);
+      setSavedMessage("");
       const nextShops = [...shops];
       if (editingShopIndex !== null) {
         nextShops[editingShopIndex] = nextShop;
@@ -138,6 +202,9 @@ export default function AdminSettings() {
       setEditingShopIndex(null);
     } catch (saveError) {
       setError(saveError.message || "Shop changes could not be saved.");
+      setSavedMessage("");
+    } finally {
+      setIsSavingShop(false);
     }
   };
 
@@ -155,7 +222,13 @@ export default function AdminSettings() {
   };
 
   const handleDeleteShop = async (index) => {
+    if (deletingShopIndex !== null) {
+      return;
+    }
+
     try {
+      setDeletingShopIndex(index);
+      setSavedMessage("");
       const nextShops = shops.filter((_, shopIndex) => shopIndex !== index);
       const nextForm = {
         ...form,
@@ -169,7 +242,19 @@ export default function AdminSettings() {
       }
     } catch (saveError) {
       setError(saveError.message || "Shop could not be removed.");
+      setSavedMessage("");
+    } finally {
+      setDeletingShopIndex(null);
     }
+  };
+
+  const resetToLastSaved = () => {
+    setForm(savedForm);
+    setShops(savedShops);
+    setShopForm({ ...emptyShop, radiusKm: savedForm.serviceRadiusKm || "25" });
+    setEditingShopIndex(null);
+    setError("");
+    setSavedMessage("Reverted to the last saved settings.");
   };
 
   return (
@@ -181,6 +266,43 @@ export default function AdminSettings() {
           <p className="mt-2 text-sm text-slate-500">
             Manage store profile, live shop coverage, and delivery rules from one place.
           </p>
+
+          <div className="mt-5 flex flex-col gap-3 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-black text-slate-950">
+                {isLoading
+                  ? "Loading current settings..."
+                  : hasUnsavedSettings || hasUnsavedShopDraft
+                    ? "You have unsaved changes."
+                    : "All settings are saved."}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {lastSavedAt
+                  ? `Last saved on ${lastSavedAt}`
+                  : "Save once after changes and the updated values will be used across checkout, payments, footer, and delivery flows."}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="ghost"
+                type="button"
+                className="px-5 py-3 font-black"
+                onClick={resetToLastSaved}
+                disabled={isLoading || (!hasUnsavedSettings && !hasUnsavedShopDraft) || isSavingSettings || isSavingShop}
+              >
+                Revert Changes
+              </Button>
+              <Button
+                variant="accent"
+                type="submit"
+                className="px-5 py-3 font-black"
+                onClick={handleSubmit}
+                disabled={isLoading || isSavingSettings || isSavingShop || !hasUnsavedSettings}
+              >
+                {isSavingSettings ? "Saving Settings..." : "Save Settings"}
+              </Button>
+            </div>
+          </div>
 
           {error ? (
             <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -334,16 +456,18 @@ export default function AdminSettings() {
                             <button
                               type="button"
                               onClick={() => handleEditShop(shop, index)}
-                              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-800"
+                              disabled={isSavingShop || deletingShopIndex !== null}
+                              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               Edit
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteShop(index)}
-                              className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-600"
+                              disabled={deletingShopIndex !== null || isSavingShop}
+                              className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                              Remove
+                              {deletingShopIndex === index ? "Removing..." : "Remove"}
                             </button>
                           </div>
                         </div>
@@ -400,14 +524,21 @@ export default function AdminSettings() {
                     onChange={(event) => setShopForm((current) => ({ ...current, mapUrl: event.target.value }))}
                   />
                   <div className="flex flex-wrap gap-3">
-                    <Button variant="accent" className="px-6 py-3 font-black" type="button" onClick={handleSaveShop}>
-                      {editingShopIndex !== null ? "Update Shop" : "Add Shop"}
+                    <Button
+                      variant="accent"
+                      className="px-6 py-3 font-black"
+                      type="button"
+                      onClick={handleSaveShop}
+                      disabled={isSavingShop || deletingShopIndex !== null}
+                    >
+                      {isSavingShop ? "Saving Shop..." : editingShopIndex !== null ? "Update Shop" : "Add Shop"}
                     </Button>
                     {editingShopIndex !== null ? (
                       <Button
                         variant="ghost"
                         className="px-5 py-3 font-black"
                         type="button"
+                        disabled={isSavingShop}
                         onClick={() => {
                           setEditingShopIndex(null);
                           setShopForm({ ...emptyShop, radiusKm: form.serviceRadiusKm || "25" });
@@ -437,8 +568,13 @@ export default function AdminSettings() {
               />
             </div>
 
-            <Button variant="accent" className="w-full py-4 font-black" type="submit">
-              Save Settings
+            <Button
+              variant="accent"
+              className="w-full py-4 font-black"
+              type="submit"
+              disabled={isLoading || isSavingSettings || isSavingShop || !hasUnsavedSettings}
+            >
+              {isSavingSettings ? "Saving Settings..." : hasUnsavedSettings ? "Save Settings" : "Settings Saved"}
             </Button>
           </form>
         </main>
