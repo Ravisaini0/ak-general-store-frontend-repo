@@ -41,11 +41,17 @@ export async function apiFetch(path, options = {}) {
     : await response.text();
 
   if (!response.ok) {
-    const isProtectedRoute =
-      path.startsWith("/api/admin") ||
-      path.startsWith("/api/delivery") ||
-      path.startsWith("/api/orders") ||
-      path.startsWith("/api/addresses");
+    const protectedRoutePrefixes = [
+      "/api/admin",
+      "/api/delivery",
+      "/api/orders",
+      "/api/addresses",
+      "/api/cart",
+      "/api/payments",
+      "/api/chakki-bookings",
+      "/api/auth/me",
+    ];
+    const isProtectedRoute = protectedRoutePrefixes.some((prefix) => path.startsWith(prefix));
 
     if ((response.status === 401 || response.status === 403) && isProtectedRoute && typeof window !== "undefined") {
       const fallbackMessage =
@@ -53,6 +59,8 @@ export async function apiFetch(path, options = {}) {
           ? "Your admin session expired. Please login again."
           : path.startsWith("/api/delivery")
             ? "Your delivery session expired. Please login again."
+            : path.startsWith("/api/chakki-bookings")
+              ? "Please login again to continue with your flour service booking."
             : "Your session expired. Please login again.";
 
       const message =

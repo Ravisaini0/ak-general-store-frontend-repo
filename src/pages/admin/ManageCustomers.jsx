@@ -25,26 +25,31 @@ export default function ManageCustomers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [updatingCustomerId, setUpdatingCustomerId] = useState(null);
   const [deletingCustomerId, setDeletingCustomerId] = useState(null);
 
   useEffect(() => {
-    async function loadCustomers() {
-      try {
+    loadCustomers();
+  }, []);
+
+  async function loadCustomers(showLoader = true) {
+    try {
+      if (showLoader) {
         setLoading(true);
-        setError("");
-        setCustomers(await fetchAdminCustomers());
-      } catch (loadError) {
-        setError(loadError.message || "Customers could not be loaded.");
-      } finally {
+      }
+      setError("");
+      setCustomers(await fetchAdminCustomers());
+    } catch (loadError) {
+      setError(loadError.message || "Customers could not be loaded.");
+    } finally {
+      if (showLoader) {
         setLoading(false);
       }
     }
-
-    loadCustomers();
-  }, []);
+  }
 
   const filteredCustomers = useMemo(() => {
     return customers.filter((customer) => {
@@ -136,6 +141,12 @@ export default function ManageCustomers() {
             </div>
           ) : null}
 
+          {successMessage ? (
+            <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {successMessage}
+            </div>
+          ) : null}
+
           {loading ? (
             <div className="mt-6 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
               Loading customers...
@@ -183,14 +194,16 @@ export default function ManageCustomers() {
                         try {
                           setUpdatingCustomerId(customer.userId);
                           setError("");
+                          setSuccessMessage("");
                           const updated = await updateCustomerBlockedStatus(
                             customer.userId,
                             !customer.blocked
                           );
-                          setCustomers((current) =>
-                            current.map((item) =>
-                              item.userId === updated.userId ? updated : item
-                            )
+                          await loadCustomers(false);
+                          setSuccessMessage(
+                            updated.blocked
+                              ? `${updated.name} has been blocked. Their current session will expire automatically.`
+                              : `${updated.name} has been unblocked successfully.`
                           );
                         } catch (updateError) {
                           setError(updateError.message || "Customer status could not be updated.");
@@ -218,9 +231,11 @@ export default function ManageCustomers() {
                         try {
                           setDeletingCustomerId(customer.userId);
                           setError("");
+                          setSuccessMessage("");
                           await deleteCustomer(customer.userId);
-                          setCustomers((current) =>
-                            current.filter((item) => item.userId !== customer.userId)
+                          await loadCustomers(false);
+                          setSuccessMessage(
+                            `${customer.name} has been deleted. Any saved session for this customer will no longer work.`
                           );
                         } catch (deleteError) {
                           setError(deleteError.message || "Customer could not be deleted.");

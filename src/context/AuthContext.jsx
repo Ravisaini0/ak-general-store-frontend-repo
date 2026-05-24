@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { fetchCurrentUserProfile } from "../services/authService";
 
 const AuthContext = createContext(null);
 const SESSION_STORAGE_KEY = "ak-general-store-session";
@@ -139,6 +140,48 @@ export function AuthProvider({ children }) {
     window.addEventListener("ak-auth-expired", handleExpiredSession);
     return () => window.removeEventListener("ak-auth-expired", handleExpiredSession);
   }, []);
+
+  useEffect(() => {
+    if (!session?.token || typeof window === "undefined") {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function validateSession() {
+      try {
+        const liveProfile = await fetchCurrentUserProfile();
+        if (cancelled) {
+          return;
+        }
+
+        if (liveProfile.blocked) {
+          logout();
+          return;
+        }
+
+        setSession((current) =>
+          current
+            ? {
+                ...current,
+                ...liveProfile,
+                token: current.token,
+              }
+            : current
+        );
+      } catch {
+        if (!cancelled) {
+          logout();
+        }
+      }
+    }
+
+    validateSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.token]);
 
   const value = useMemo(
     () => ({

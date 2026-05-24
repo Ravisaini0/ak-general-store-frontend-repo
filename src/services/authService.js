@@ -177,3 +177,8 @@ export async function removeProfileAvatar() {
     method: "DELETE",
   });
 }
+
+export async function fetchCurrentUserProfile() {
+  const response = await apiFetch("/api/auth/me");
+  return mapAuthPayload(response.data);
+}

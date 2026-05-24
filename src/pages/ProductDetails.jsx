@@ -101,6 +101,52 @@ export default function ProductDetails() {
     setFeedback(`${product.name} has been added to your cart.`);
   };
 
+  const handleTopWishlist = () => {
+    if (session?.role === "user") {
+      toggleWishlist(product);
+      setFeedback(
+        wishlisted
+          ? `${product.name} removed from your wishlist.`
+          : `${product.name} added to your wishlist.`
+      );
+      return;
+    }
+
+    navigate("/login", {
+      state: {
+        from: { pathname: `/product/${id}` },
+        loginMessage: "Please login to save products to your wishlist.",
+      },
+    });
+  };
+
+  const handleShareProduct = async () => {
+    const shareUrl = typeof window !== "undefined" ? window.location.href : `/product/${id}`;
+    const sharePayload = {
+      title: product.name,
+      text: `Check out ${product.name} on AK General Store`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(sharePayload);
+        setFeedback("Product link shared successfully.");
+        return;
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setFeedback("Product link copied. You can share it now.");
+        return;
+      }
+
+      setFeedback("Sharing is not available on this device.");
+    } catch {
+      setFeedback("Product link could not be shared right now.");
+    }
+  };
+
   const handleBuyNow = () => {
     flushSync(() => {
       buyNow(product, quantity);
@@ -147,14 +193,37 @@ export default function ProductDetails() {
             </div>
             <p className="order-3 w-full text-center text-sm font-bold text-slate-900 sm:order-none sm:w-auto">Product Details</p>
             <div className="flex items-center gap-3">
-              <Heart className="h-5 w-5 text-slate-500" />
-              <Share2 className="h-5 w-5 text-slate-500" />
-              <div className="relative">
-                <ShoppingCart className="h-5 w-5 text-slate-800" />
+              <button
+                type="button"
+                onClick={handleTopWishlist}
+                className={`rounded-full border p-2 transition ${
+                  wishlisted
+                    ? "border-red-200 bg-red-50 text-red-600"
+                    : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                }`}
+                aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <Heart className={`h-5 w-5 ${wishlisted ? "fill-current" : ""}`} />
+              </button>
+              <button
+                type="button"
+                onClick={handleShareProduct}
+                className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50"
+                aria-label="Share product"
+              >
+                <Share2 className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/cart")}
+                className="relative rounded-full border border-slate-200 bg-white p-2 text-slate-800 transition hover:bg-slate-50"
+                aria-label="Open cart"
+              >
+                <ShoppingCart className="h-5 w-5" />
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-yellow-400 text-[10px] font-black text-slate-950">
                   {totalItems}
                 </span>
-              </div>
+              </button>
             </div>
           </div>
 
