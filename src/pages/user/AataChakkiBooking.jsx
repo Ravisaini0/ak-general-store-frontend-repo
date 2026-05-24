@@ -303,75 +303,75 @@ export default function AataChakkiBooking() {
               )}
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-6 grid gap-4 md:grid-cols-2">
-              <input
-                className="store-input"
-                placeholder="Pickup Contact Name"
-                value={form.fullName}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, fullName: event.target.value }))
-                }
-              />
-              <input
-                className="store-input"
-                placeholder="Pickup Contact Phone"
-                value={form.phone}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, phone: event.target.value }))
-                }
-              />
-              <textarea
-                className="store-input min-h-[120px] md:col-span-2"
-                placeholder="Pickup Address"
-                value={form.pickupAddress}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, pickupAddress: event.target.value }))
-                }
-              />
-              <select
-                className="store-input"
-                value={form.grainType}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, grainType: event.target.value }))
-                }
-              >
-                <option>Wheat</option>
-                <option>Multi Grain</option>
-                <option>Maize</option>
-                <option>Bajra</option>
-              </select>
-              <input
-                className="store-input"
-                type="number"
-                min="1"
-                placeholder="Quantity (kg)"
-                value={form.quantityKg}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, quantityKg: event.target.value }))
-                }
-              />
-              <select
-                className="store-input md:col-span-2"
-                value={form.preferredSlot}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, preferredSlot: event.target.value }))
-                }
-              >
-                <option>Today Evening</option>
-                <option>Tomorrow Morning</option>
-                <option>Tomorrow Evening</option>
-                <option>Flexible Pickup Slot</option>
-              </select>
-              <textarea
-                className="store-input min-h-[110px] md:col-span-2"
-                placeholder="Notes for pickup team, grain instructions, or milling preference"
-                value={form.notes}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, notes: event.target.value }))
-                }
-              />
+            {selectedAddress ? (
+              <form onSubmit={handleSubmit} className="mt-6 grid gap-4 md:grid-cols-2">
+                <input
+                  className="store-input"
+                  placeholder="Pickup Contact Name"
+                  value={form.fullName}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, fullName: event.target.value }))
+                  }
+                />
+                <input
+                  className="store-input"
+                  placeholder="Pickup Contact Phone"
+                  value={form.phone}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, phone: event.target.value }))
+                  }
+                />
+                <textarea
+                  className="store-input min-h-[120px] md:col-span-2"
+                  placeholder="Pickup Address"
+                  value={form.pickupAddress}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, pickupAddress: event.target.value }))
+                  }
+                />
+                <select
+                  className="store-input"
+                  value={form.grainType}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, grainType: event.target.value }))
+                  }
+                >
+                  <option>Wheat</option>
+                  <option>Multi Grain</option>
+                  <option>Maize</option>
+                  <option>Bajra</option>
+                </select>
+                <input
+                  className="store-input"
+                  type="number"
+                  min="1"
+                  placeholder="Quantity (kg)"
+                  value={form.quantityKg}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, quantityKg: event.target.value }))
+                  }
+                />
+                <select
+                  className="store-input md:col-span-2"
+                  value={form.preferredSlot}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, preferredSlot: event.target.value }))
+                  }
+                >
+                  <option>Today Evening</option>
+                  <option>Tomorrow Morning</option>
+                  <option>Tomorrow Evening</option>
+                  <option>Flexible Pickup Slot</option>
+                </select>
+                <textarea
+                  className="store-input min-h-[110px] md:col-span-2"
+                  placeholder="Notes for pickup team, grain instructions, or milling preference"
+                  value={form.notes}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, notes: event.target.value }))
+                  }
+                />
 
-              {selectedAddress ? (
                 <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                   <p className="font-black text-slate-950">Current pickup address source</p>
                   <p className="mt-2">{selectedAddress.fullAddress}</p>
@@ -379,36 +379,40 @@ export default function AataChakkiBooking() {
                     Update the selected saved address in Address Book if your Home, Office, or pickup spot changes.
                   </p>
                 </div>
-              ) : null}
 
-              {message ? (
-                <p className="md:col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  {message}
-                </p>
-              ) : null}
-              {error ? (
-                <p className="md:col-span-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </p>
-              ) : null}
+                {message ? (
+                  <p className="md:col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    {message}
+                  </p>
+                ) : null}
+                {error ? (
+                  <p className="md:col-span-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </p>
+                ) : null}
 
-              <div className="md:col-span-2 flex flex-wrap gap-3">
-                <Button
-                  variant="accent"
-                  className="px-6 py-3 font-black"
-                  type="submit"
-                  disabled={submitting}
-                >
-                  {submitting ? "Booking Service..." : "Book Chakki Service"}
-                </Button>
-                <Link
-                  to="/address-book"
-                  className="inline-flex rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-50"
-                >
-                  Update Pickup Address
-                </Link>
+                <div className="md:col-span-2 flex flex-wrap gap-3">
+                  <Button
+                    variant="accent"
+                    className="px-6 py-3 font-black"
+                    type="submit"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Booking Service..." : "Book Chakki Service"}
+                  </Button>
+                  <Link
+                    to="/address-book"
+                    className="inline-flex rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-50"
+                  >
+                    Update Pickup Address
+                  </Link>
+                </div>
+              </form>
+            ) : (
+              <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+                Save a pickup address first from Manage Pickup Addresses, then this booking form will open with the same professional address card flow.
               </div>
-            </form>
+            )}
           </section>
 
           <section className="space-y-6">

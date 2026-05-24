@@ -1,4 +1,7 @@
 const IMAGE_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+const PROFILE_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+const CATEGORY_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const PRODUCT_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 const IMAGE_UPLOAD_ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const IMAGE_UPLOAD_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -13,13 +16,15 @@ function getFileExtension(name = "") {
   return dotIndex >= 0 ? normalizedName.slice(dotIndex) : "";
 }
 
-export function getImageUploadSupportText() {
+export function getImageUploadSupportText(maxBytes = IMAGE_UPLOAD_MAX_BYTES) {
   return `Supported: JPG, PNG, WEBP. Max file size: ${formatBytes(
-    IMAGE_UPLOAD_MAX_BYTES
+    maxBytes
   )}. If your image is HEIC, AVIF, or too large, convert or compress it first.`;
 }
 
-export function validateImageUploadFile(file) {
+export function validateImageUploadFile(file, options = {}) {
+  const maxBytes = Number(options.maxBytes || IMAGE_UPLOAD_MAX_BYTES);
+
   if (!file) {
     return "Please choose an image file first.";
   }
@@ -37,9 +42,9 @@ export function validateImageUploadFile(file) {
     return `The file "${file.name}" is not a supported image type. Please upload a JPG, PNG, or WEBP image.`;
   }
 
-  if (file.size > IMAGE_UPLOAD_MAX_BYTES) {
+  if (file.size > maxBytes) {
     return `The file "${file.name}" is ${formatBytes(file.size)}, but the limit is ${formatBytes(
-      IMAGE_UPLOAD_MAX_BYTES
+      maxBytes
     )}. Please compress or resize this image and try again.`;
   }
 
@@ -47,3 +52,6 @@ export function validateImageUploadFile(file) {
 }
 
 export { IMAGE_UPLOAD_MAX_BYTES };
+export { PROFILE_IMAGE_MAX_BYTES };
+export { CATEGORY_IMAGE_MAX_BYTES };
+export { PRODUCT_IMAGE_MAX_BYTES };

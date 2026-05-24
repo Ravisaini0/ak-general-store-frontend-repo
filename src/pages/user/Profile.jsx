@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   getImageUploadSupportText,
+  PROFILE_IMAGE_MAX_BYTES,
   validateImageUploadFile,
 } from "../../utils/imageUploadRules";
 
@@ -82,7 +83,7 @@ export default function Profile() {
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const [avatarMessageTone, setAvatarMessageTone] = useState("neutral");
-  const imageUploadSupportText = getImageUploadSupportText();
+  const imageUploadSupportText = getImageUploadSupportText(PROFILE_IMAGE_MAX_BYTES);
 
   const handleLogout = () => {
     logout();
@@ -101,7 +102,9 @@ export default function Profile() {
       return;
     }
 
-    const invalidMessage = validateImageUploadFile(file);
+    const invalidMessage = validateImageUploadFile(file, {
+      maxBytes: PROFILE_IMAGE_MAX_BYTES,
+    });
     if (invalidMessage) {
       setAvatarMessageTone("error");
       setAvatarMessage(invalidMessage);

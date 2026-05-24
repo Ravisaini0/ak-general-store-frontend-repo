@@ -11,6 +11,7 @@ import {
   updateCategory,
 } from "../../services/productService";
 import {
+  CATEGORY_IMAGE_MAX_BYTES,
   getImageUploadSupportText,
   validateImageUploadFile,
 } from "../../utils/imageUploadRules";
@@ -52,7 +53,7 @@ export default function ManageCategories() {
   const [uploadFeedback, setUploadFeedback] = useState({ type: "", message: "" });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const imageUploadSupportText = getImageUploadSupportText();
+  const imageUploadSupportText = getImageUploadSupportText(CATEGORY_IMAGE_MAX_BYTES);
 
   useEffect(() => {
     async function loadCategories() {
@@ -165,7 +166,9 @@ export default function ManageCategories() {
       return;
     }
 
-    const invalidMessage = validateImageUploadFile(file);
+    const invalidMessage = validateImageUploadFile(file, {
+      maxBytes: CATEGORY_IMAGE_MAX_BYTES,
+    });
     if (invalidMessage) {
       setUploadFeedback({ type: "error", message: invalidMessage });
       event.target.value = "";

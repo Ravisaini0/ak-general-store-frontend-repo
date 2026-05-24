@@ -14,6 +14,7 @@ import {
 import { formatPrice } from "../../utils/formatPrice";
 import {
   getImageUploadSupportText,
+  PRODUCT_IMAGE_MAX_BYTES,
   validateImageUploadFile,
 } from "../../utils/imageUploadRules";
 import { getFallbackProductImage } from "../../utils/storeMappers";
@@ -65,7 +66,7 @@ export default function ManageProducts() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [featuredFilter, setFeaturedFilter] = useState("ALL");
-  const imageUploadSupportText = getImageUploadSupportText();
+  const imageUploadSupportText = getImageUploadSupportText(PRODUCT_IMAGE_MAX_BYTES);
 
   const categoryMap = useMemo(
     () => Object.fromEntries(categories.map((category) => [category.id, category.name])),
@@ -157,7 +158,7 @@ export default function ManageProducts() {
     }
 
     const invalidMessage = files
-      .map((file) => validateImageUploadFile(file))
+      .map((file) => validateImageUploadFile(file, { maxBytes: PRODUCT_IMAGE_MAX_BYTES }))
       .find(Boolean);
     if (invalidMessage) {
       setUploadFeedback({ type: "error", message: invalidMessage });
