@@ -22,6 +22,10 @@ function getStatusTone(status) {
   }
 }
 
+function formatMoney(value) {
+  return `Rs${Number(value || 0).toFixed(0)}`;
+}
+
 export default function DeliveryOrderCard({ order, onAccept }) {
   return (
     <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
@@ -46,7 +50,7 @@ export default function DeliveryOrderCard({ order, onAccept }) {
           </div>
         </div>
         <div className="lg:text-right">
-          <p className="font-black text-slate-950">Rs{order.totalAmount || order.total}</p>
+          <p className="font-black text-slate-950">{formatMoney(order.totalAmount || order.total)}</p>
           <p className="mt-1 text-xs text-slate-500">{formatOrderItems(order)}</p>
           <p
             className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusTone(order.status)}`}
@@ -64,6 +68,27 @@ export default function DeliveryOrderCard({ order, onAccept }) {
           ) : null}
         </div>
       </div>
+      {order.orderItems?.length ? (
+        <div className="mt-4 rounded-2xl bg-slate-50 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Ordered items</p>
+          <div className="mt-3 space-y-2">
+            {order.orderItems.map((item) => (
+              <div
+                key={`${item.productId}-${item.productName}`}
+                className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-3 text-sm"
+              >
+                <div>
+                  <p className="font-semibold text-slate-900">{item.productName}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Qty {item.quantity} • {formatMoney(item.price)} each
+                  </p>
+                </div>
+                <p className="font-bold text-slate-900">{formatMoney(item.lineTotal || item.price)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

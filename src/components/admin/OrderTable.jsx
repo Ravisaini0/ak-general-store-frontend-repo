@@ -8,6 +8,10 @@ function formatOrderItems(order) {
   return order.itemNames?.join(", ") || "Grocery order";
 }
 
+function formatMoney(value) {
+  return `Rs.${Number(value || 0).toFixed(0)}`;
+}
+
 function getStatusTone(status) {
   switch (status) {
     case "ORDER_PLACED":
@@ -27,22 +31,60 @@ function getStatusTone(status) {
   }
 }
 
+function renderOrderItems(order) {
+  if (!order.orderItems?.length) {
+    return <p className="mt-1">{formatOrderItems(order)}</p>;
+  }
+
+  return (
+    <div className="mt-2 space-y-2">
+      {order.orderItems.map((item) => (
+        <div
+          key={`${item.productId}-${item.productName}`}
+          className="rounded-xl bg-white px-3 py-2"
+        >
+          <p className="font-semibold text-slate-900">{item.productName}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Qty {item.quantity} • {formatMoney(item.price)} each • Total{" "}
+            {formatMoney(item.lineTotal || item.price)}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function OrderTable({ orders, onConfirm, onAssign }) {
   return (
     <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
       <div className="space-y-4 p-4 xl:hidden">
         {orders.map((order, index) => (
-          <div key={order.orderNumber || order.id} className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
+          <div
+            key={order.orderNumber || order.id}
+            className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4"
+          >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="font-black text-slate-950">#{order.orderNumber || order.id}</p>
-                <p className="mt-2 font-semibold text-slate-900">{order.customerName || order.customer}</p>
-                <p className="mt-1 text-xs text-slate-500">{order.customerEmail || order.customerPhone || "Customer profile"}</p>
+                <p className="mt-2 font-semibold text-slate-900">
+                  {order.customerName || order.customer}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {order.customerEmail || order.customerPhone || "Customer profile"}
+                </p>
               </div>
               <div className="sm:text-right">
-                <p className="font-black text-slate-950">Rs.{order.totalAmount || order.total}</p>
-                <p className="mt-1 text-sm text-slate-500">{order.paymentMode || order.paymentType}</p>
-                <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusTone(order.status)}`}>
+                <p className="font-black text-slate-950">
+                  {formatMoney(order.totalAmount || order.total)}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  {order.paymentMode || order.paymentType}
+                </p>
+                <span
+                  className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusTone(
+                    order.status
+                  )}`}
+                >
                   {getOrderStatusLabel(order.status)}
                 </span>
               </div>
@@ -52,15 +94,19 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Date</p>
                 <p className="mt-1">
-                  {order.createdAt ? new Date(order.createdAt).toLocaleString() : `12 May, ${10 + index}:30 AM`}
+                  {order.createdAt
+                    ? new Date(order.createdAt).toLocaleString()
+                    : `12 May, ${10 + index}:30 AM`}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Items</p>
-                <p className="mt-1">{formatOrderItems(order)}</p>
+                {renderOrderItems(order)}
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Payment state</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                  Payment state
+                </p>
                 <p className="mt-1">
                   {order.paymentStatus || "PENDING"}
                   {order.collectionMethod ? ` • ${order.collectionMethod}` : ""}
@@ -76,23 +122,29 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Batch</p>
                   <p className="mt-1">
-                    Batch #{order.batchId} • {order.batchTotalOrders || 0} orders • Rs.
-                    {Number(order.batchTotalEarning || 0).toFixed(0)}
+                    Batch #{order.batchId} • {order.batchTotalOrders || 0} orders •{" "}
+                    {formatMoney(order.batchTotalEarning)}
                   </p>
                 </div>
               ) : null}
               {order.assignedDeliveryName ? (
                 <div className="sm:col-span-2">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Assigned delivery</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                    Assigned delivery
+                  </p>
                   <p className="mt-1">
                     {order.assignedDeliveryName}
-                    {order.deliveryBoyStatus ? ` • ${String(order.deliveryBoyStatus).replaceAll("_", " ")}` : ""}
+                    {order.deliveryBoyStatus
+                      ? ` • ${String(order.deliveryBoyStatus).replaceAll("_", " ")}`
+                      : ""}
                   </p>
                 </div>
               ) : null}
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Delivery earning</p>
-                <p className="mt-1">Rs.{Number(order.deliveryEarningAmount || 0).toFixed(0)}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                  Delivery earning
+                </p>
+                <p className="mt-1">{formatMoney(order.deliveryEarningAmount)}</p>
               </div>
             </div>
 
@@ -127,7 +179,7 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
               <th className="px-4 py-3">Order ID</th>
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Total</th>
-              <th className="px-4 py-3">Payment</th>
+              <th className="px-4 py-3">Payment & Items</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Batch / Delivery</th>
               <th className="px-4 py-3">Date</th>
@@ -136,22 +188,52 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
           </thead>
           <tbody>
             {orders.map((order, index) => (
-              <tr key={order.orderNumber || order.id} className="border-t border-slate-100">
-                <td className="px-4 py-4 font-semibold text-slate-900">#{order.orderNumber || order.id}</td>
-                <td className="px-4 py-4 text-slate-700">
-                  <p className="font-semibold text-slate-900">{order.customerName || order.customer}</p>
-                  <p className="mt-1 text-xs text-slate-500">{order.customerEmail || order.customerPhone || "Customer profile"}</p>
+              <tr key={order.orderNumber || order.id} className="border-t border-slate-100 align-top">
+                <td className="px-4 py-4 font-semibold text-slate-900">
+                  #{order.orderNumber || order.id}
                 </td>
-                <td className="px-4 py-4 font-semibold text-slate-950">Rs.{order.totalAmount || order.total}</td>
                 <td className="px-4 py-4 text-slate-700">
-                  <p className="font-semibold text-slate-900">{order.paymentMode || order.paymentType}</p>
+                  <p className="font-semibold text-slate-900">
+                    {order.customerName || order.customer}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {order.customerEmail || order.customerPhone || "Customer profile"}
+                  </p>
+                </td>
+                <td className="px-4 py-4 font-semibold text-slate-950">
+                  {formatMoney(order.totalAmount || order.total)}
+                </td>
+                <td className="px-4 py-4 text-slate-700">
+                  <p className="font-semibold text-slate-900">
+                    {order.paymentMode || order.paymentType}
+                  </p>
                   <p className="mt-1 text-xs text-slate-500">
                     {order.paymentStatus || "PENDING"}
                     {order.collectionMethod ? ` • ${order.collectionMethod}` : ""}
                   </p>
+                  {order.orderItems?.length ? (
+                    <div className="mt-3 min-w-[280px] space-y-2">
+                      {order.orderItems.map((item) => (
+                        <div
+                          key={`${item.productId}-${item.productName}`}
+                          className="rounded-xl bg-slate-50 px-3 py-2"
+                        >
+                          <p className="font-semibold text-slate-900">{item.productName}</p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Qty {item.quantity} • {formatMoney(item.price)} each • Total{" "}
+                            {formatMoney(item.lineTotal || item.price)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </td>
                 <td className="px-4 py-4">
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusTone(order.status)}`}>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusTone(
+                      order.status
+                    )}`}
+                  >
                     {getOrderStatusLabel(order.status)}
                   </span>
                 </td>
@@ -161,16 +243,21 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
                     {order.assignedDeliveryName || "Not assigned yet"}
-                    {order.deliveryBoyStatus ? ` • ${String(order.deliveryBoyStatus).replaceAll("_", " ")}` : ""}
+                    {order.deliveryBoyStatus
+                      ? ` • ${String(order.deliveryBoyStatus).replaceAll("_", " ")}`
+                      : ""}
                   </p>
                   {order.batchId ? (
                     <p className="mt-1 text-xs text-slate-500">
-                      {order.batchTotalOrders || 0} orders • Batch earning Rs.{Number(order.batchTotalEarning || 0).toFixed(0)}
+                      {order.batchTotalOrders || 0} orders • Batch earning{" "}
+                      {formatMoney(order.batchTotalEarning)}
                     </p>
                   ) : null}
                 </td>
                 <td className="px-4 py-4 text-slate-500">
-                  {order.createdAt ? new Date(order.createdAt).toLocaleString() : `12 May, ${10 + index}:30 AM`}
+                  {order.createdAt
+                    ? new Date(order.createdAt).toLocaleString()
+                    : `12 May, ${10 + index}:30 AM`}
                 </td>
                 <td className="px-4 py-4">
                   <div className="flex flex-wrap gap-2">
@@ -198,7 +285,7 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
                       </span>
                     ) : null}
                     <span className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
-                      Earn Rs.{Number(order.deliveryEarningAmount || 0).toFixed(0)}
+                      Earn {formatMoney(order.deliveryEarningAmount)}
                     </span>
                     {order.orderItems?.length || order.itemNames?.length ? (
                       <span className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">

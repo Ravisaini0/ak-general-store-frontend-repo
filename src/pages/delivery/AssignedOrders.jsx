@@ -11,6 +11,10 @@ function formatOrderItems(order) {
   return order.itemNames?.join(", ") || "Grocery order";
 }
 
+function formatMoney(value) {
+  return `Rs.${Number(value || 0).toFixed(0)}`;
+}
+
 export default function AssignedOrders() {
   const { orders, pickOrder, refreshOrders } = useOrders();
   const readyOrders = orders.filter((order) => order.status === "ASSIGNED_TO_DELIVERY");
@@ -45,7 +49,10 @@ export default function AssignedOrders() {
       <div className="mt-6 space-y-4">
         {orders.length ? (
           orders.map((order) => (
-            <div key={order.orderNumber} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+            <div
+              key={order.orderNumber}
+              className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4"
+            >
               <DeliveryOrderCard
                 order={order}
                 onAccept={
@@ -57,13 +64,32 @@ export default function AssignedOrders() {
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-sm text-slate-500">
                   <p>
-                    Delivery address: <span className="font-semibold text-slate-700">{order.deliveryAddress || "Pending"}</span>
+                    Delivery address:{" "}
+                    <span className="font-semibold text-slate-700">
+                      {order.deliveryAddress || "Pending"}
+                    </span>
                   </p>
                   <p className="mt-1">
-                    Ordered items: <span className="font-semibold text-slate-700">{formatOrderItems(order)}</span>
+                    Ordered items:{" "}
+                    <span className="font-semibold text-slate-700">{formatOrderItems(order)}</span>
                   </p>
+                  {order.orderItems?.length ? (
+                    <div className="mt-2 space-y-2">
+                      {order.orderItems.map((item) => (
+                        <div
+                          key={`${item.productId}-${item.productName}`}
+                          className="rounded-xl bg-white px-3 py-2 text-xs text-slate-600"
+                        >
+                          <span className="font-semibold text-slate-800">{item.productName}</span>
+                          {` • Qty ${item.quantity} • ${formatMoney(item.price)} each • ${formatMoney(
+                            item.lineTotal || item.price
+                          )}`}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   <p className="mt-1">
-                    Batch #{order.batchId || "-"} • Earn Rs.{Number(order.deliveryEarningAmount || 0).toFixed(0)}
+                    Batch #{order.batchId || "-"} • Earn {formatMoney(order.deliveryEarningAmount)}
                     {order.batchTotalOrders ? ` • ${order.batchTotalOrders} batch orders` : ""}
                   </p>
                 </div>

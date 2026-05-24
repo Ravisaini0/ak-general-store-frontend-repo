@@ -61,6 +61,7 @@ export default function ManageProducts() {
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadFeedback, setUploadFeedback] = useState({ type: "", message: "" });
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [featuredFilter, setFeaturedFilter] = useState("ALL");
@@ -123,6 +124,7 @@ export default function ManageProducts() {
     setEditingProduct(null);
     setForm(emptyForm);
     setError("");
+    setUploadFeedback({ type: "", message: "" });
     setShowModal(true);
   };
 
@@ -144,6 +146,7 @@ export default function ManageProducts() {
       featured: Boolean(product.featured),
     });
     setError("");
+    setUploadFeedback({ type: "", message: "" });
     setShowModal(true);
   };
 
@@ -157,7 +160,7 @@ export default function ManageProducts() {
       .map((file) => validateImageUploadFile(file))
       .find(Boolean);
     if (invalidMessage) {
-      setError(invalidMessage);
+      setUploadFeedback({ type: "error", message: invalidMessage });
       event.target.value = "";
       return;
     }
@@ -165,6 +168,7 @@ export default function ManageProducts() {
     try {
       setUploadingImage(true);
       setError("");
+      setUploadFeedback({ type: "", message: "" });
       const uploadedUrls = [];
       for (const file of files) {
         uploadedUrls.push(await uploadProductImage(file));
@@ -177,8 +181,15 @@ export default function ManageProducts() {
           imageUrls: nextImageUrls.length ? nextImageUrls : [""],
         };
       });
+      setUploadFeedback({
+        type: "success",
+        message: `${uploadedUrls.length} image${uploadedUrls.length > 1 ? "s were" : " was"} uploaded successfully.`,
+      });
     } catch (uploadError) {
-      setError(uploadError.message || "Product image could not be uploaded.");
+      setUploadFeedback({
+        type: "error",
+        message: uploadError.message || "Product image could not be uploaded.",
+      });
     } finally {
       setUploadingImage(false);
       event.target.value = "";
@@ -223,6 +234,7 @@ export default function ManageProducts() {
       setShowModal(false);
       setForm(emptyForm);
       setEditingProduct(null);
+      setUploadFeedback({ type: "", message: "" });
     } catch (submitError) {
       setError(submitError.message || "Product could not be saved.");
     } finally {
@@ -565,6 +577,17 @@ export default function ManageProducts() {
               Choose one or many files. Uploaded images will be added to the gallery automatically.
             </p>
             <p className="mt-2 text-xs text-slate-500">{imageUploadSupportText}</p>
+            {uploadFeedback.message ? (
+              <div
+                className={`mt-3 rounded-xl border px-3 py-3 text-sm ${
+                  uploadFeedback.type === "success"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-red-200 bg-red-50 text-red-700"
+                }`}
+              >
+                {uploadFeedback.message}
+              </div>
+            ) : null}
             <label className="mt-4 inline-flex cursor-pointer rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white">
               {uploadingImage ? "Uploading..." : "Choose Images"}
               <input

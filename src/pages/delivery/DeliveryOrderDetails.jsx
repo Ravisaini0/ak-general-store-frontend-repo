@@ -16,6 +16,10 @@ function formatOrderItems(order) {
   return order.itemNames?.join(", ") || "Grocery order";
 }
 
+function formatMoney(value) {
+  return `Rs${Number(value || 0).toFixed(0)}`;
+}
+
 export default function DeliveryOrderDetails() {
   const { id } = useParams();
   const { orders, pickOrder, deliverOrder, refreshOrders } = useOrders();
@@ -179,7 +183,7 @@ export default function DeliveryOrderDetails() {
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Order value</p>
-                  <p className="mt-2 font-black text-slate-950">Rs{order.totalAmount}</p>
+                  <p className="mt-2 font-black text-slate-950">{formatMoney(order.totalAmount)}</p>
                   <p className="mt-1 text-sm text-slate-500">{formatOrderItems(order)}</p>
                 </div>
               </div>
@@ -191,9 +195,13 @@ export default function DeliveryOrderDetails() {
                       <div key={`${item.productId}-${item.productName}`} className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-3 text-sm">
                         <div>
                           <p className="font-semibold text-slate-900">{item.productName}</p>
-                          <p className="mt-1 text-xs text-slate-500">Qty {item.quantity}</p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Qty {item.quantity} • {formatMoney(item.price)} each
+                          </p>
                         </div>
-                        <p className="font-bold text-slate-900">Rs{item.lineTotal || item.price}</p>
+                        <p className="font-bold text-slate-900">
+                          {formatMoney(item.lineTotal || item.price)}
+                        </p>
                       </div>
                     ))}
                   </div>

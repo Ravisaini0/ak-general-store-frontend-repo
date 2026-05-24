@@ -49,6 +49,7 @@ export default function ManageCategories() {
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadFeedback, setUploadFeedback] = useState({ type: "", message: "" });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const imageUploadSupportText = getImageUploadSupportText();
@@ -96,6 +97,7 @@ export default function ManageCategories() {
   const openCreateModal = () => {
     setEditingCategory(null);
     setForm(emptyForm);
+    setUploadFeedback({ type: "", message: "" });
     setShowModal(true);
   };
 
@@ -107,6 +109,7 @@ export default function ManageCategories() {
       imageUrl: category.imageUrl || "",
       active: category.active ?? true,
     });
+    setUploadFeedback({ type: "", message: "" });
     setShowModal(true);
   };
 
@@ -164,7 +167,7 @@ export default function ManageCategories() {
 
     const invalidMessage = validateImageUploadFile(file);
     if (invalidMessage) {
-      setError(invalidMessage);
+      setUploadFeedback({ type: "error", message: invalidMessage });
       event.target.value = "";
       return;
     }
@@ -172,10 +175,15 @@ export default function ManageCategories() {
     try {
       setUploadingImage(true);
       setError("");
+      setUploadFeedback({ type: "", message: "" });
       const imageUrl = await uploadCategoryImage(file);
       setForm((current) => ({ ...current, imageUrl }));
+      setUploadFeedback({ type: "success", message: "Category image uploaded successfully." });
     } catch (uploadError) {
-      setError(uploadError.message || "Category image could not be uploaded.");
+      setUploadFeedback({
+        type: "error",
+        message: uploadError.message || "Category image could not be uploaded.",
+      });
     } finally {
       setUploadingImage(false);
       event.target.value = "";
@@ -368,6 +376,17 @@ export default function ManageCategories() {
                   Upload a JPG, PNG, or WEBP image for storefront cards and category landing views.
                 </p>
                 <p className="mt-1 text-xs text-slate-500">{imageUploadSupportText}</p>
+                {uploadFeedback.message ? (
+                  <div
+                    className={`mt-3 rounded-xl border px-3 py-3 text-sm ${
+                      uploadFeedback.type === "success"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-red-200 bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {uploadFeedback.message}
+                  </div>
+                ) : null}
               </div>
               <label className="cursor-pointer">
                 <input

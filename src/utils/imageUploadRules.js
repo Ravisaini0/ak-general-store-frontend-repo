@@ -1,4 +1,4 @@
-const IMAGE_UPLOAD_MAX_BYTES = 2 * 1024 * 1024;
+const IMAGE_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
 const IMAGE_UPLOAD_ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const IMAGE_UPLOAD_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 

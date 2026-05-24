@@ -81,6 +81,7 @@ export default function Profile() {
   const [avatarZoom, setAvatarZoom] = useState(1);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  const [avatarMessageTone, setAvatarMessageTone] = useState("neutral");
   const imageUploadSupportText = getImageUploadSupportText();
 
   const handleLogout = () => {
@@ -102,6 +103,7 @@ export default function Profile() {
 
     const invalidMessage = validateImageUploadFile(file);
     if (invalidMessage) {
+      setAvatarMessageTone("error");
       setAvatarMessage(invalidMessage);
       event.target.value = "";
       return;
@@ -112,8 +114,10 @@ export default function Profile() {
       setAvatarSource(source);
       setAvatarZoom(1);
       setAvatarMessage("");
+      setAvatarMessageTone("neutral");
       setAvatarModalOpen(true);
     } catch {
+      setAvatarMessageTone("error");
       setAvatarMessage("Selected image could not be opened. Please try another JPG, PNG, or WEBP file.");
     } finally {
       event.target.value = "";
@@ -126,6 +130,7 @@ export default function Profile() {
     }
 
     setAvatarMessage("");
+    setAvatarMessageTone("neutral");
     setIsUploadingAvatar(true);
 
     try {
@@ -137,8 +142,10 @@ export default function Profile() {
       setAvatarModalOpen(false);
       setAvatarSource("");
       setAvatarZoom(1);
+      setAvatarMessageTone("success");
       setAvatarMessage("Profile image updated successfully.");
     } catch (error) {
+      setAvatarMessageTone("error");
       setAvatarMessage(
         error?.message ||
           "Profile image could not be uploaded. Please try a smaller JPG, PNG, or WEBP image."
@@ -150,6 +157,7 @@ export default function Profile() {
 
   const handleRemoveAvatar = async () => {
     setAvatarMessage("");
+    setAvatarMessageTone("neutral");
     setIsRemovingAvatar(true);
 
     try {
@@ -157,8 +165,10 @@ export default function Profile() {
       updateProfile({
         avatar: null,
       });
+      setAvatarMessageTone("success");
       setAvatarMessage("Profile image removed successfully.");
     } catch {
+      setAvatarMessageTone("error");
       setAvatarMessage("Profile image could not be removed. Please try again.");
     } finally {
       setIsRemovingAvatar(false);
@@ -231,7 +241,19 @@ export default function Profile() {
                 </button>
               ) : null}
               <p className="mt-3 text-sm text-slate-500">{imageUploadSupportText}</p>
-              {avatarMessage ? <p className="mt-3 text-sm text-slate-500">{avatarMessage}</p> : null}
+              {avatarMessage ? (
+                <div
+                  className={`mt-3 rounded-xl border px-3 py-3 text-sm ${
+                    avatarMessageTone === "success"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : avatarMessageTone === "error"
+                        ? "border-red-200 bg-red-50 text-red-700"
+                        : "border-slate-200 bg-slate-50 text-slate-600"
+                  }`}
+                >
+                  {avatarMessage}
+                </div>
+              ) : null}
             </div>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
