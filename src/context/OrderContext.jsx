@@ -45,6 +45,16 @@ function mapBackendStatus(status) {
 }
 
 function normalizeOrder(order) {
+  const normalizedOrderItems = Array.isArray(order.orderItems)
+    ? order.orderItems.map((item) => ({
+        productId: Number(item.productId || 0),
+        productName: item.productName || "Grocery item",
+        quantity: Number(item.quantity || 0),
+        price: Number(item.price || 0),
+        lineTotal: Number(item.lineTotal || 0),
+      }))
+    : [];
+
   return {
     orderId: Number(order.orderId || order.id || 0),
     orderNumber: order.orderNumber || `AK${order.orderId || order.id || Date.now()}`,
@@ -64,6 +74,7 @@ function normalizeOrder(order) {
     paymentStatus: order.paymentStatus || "PENDING",
     paymentMode: order.paymentMode || order.paymentType || "COD",
     itemNames: order.itemNames || [],
+    orderItems: normalizedOrderItems,
     deliveryAddress: order.deliveryAddress || order.address || "",
     deliveryLatitude: order.deliveryLatitude ?? null,
     deliveryLongitude: order.deliveryLongitude ?? null,

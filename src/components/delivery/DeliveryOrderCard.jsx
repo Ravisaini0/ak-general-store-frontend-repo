@@ -1,6 +1,14 @@
 import { Clock3, MapPinned, PackageCheck } from "lucide-react";
 import { getOrderStatusLabel } from "../../utils/orderStatus";
 
+function formatOrderItems(order) {
+  if (order.orderItems?.length) {
+    return order.orderItems.map((item) => `${item.productName} x${item.quantity}`).join(", ");
+  }
+
+  return order.itemNames?.join(", ") || "Grocery order";
+}
+
 function getStatusTone(status) {
   switch (status) {
     case "ASSIGNED_TO_DELIVERY":
@@ -39,7 +47,7 @@ export default function DeliveryOrderCard({ order, onAccept }) {
         </div>
         <div className="lg:text-right">
           <p className="font-black text-slate-950">Rs{order.totalAmount || order.total}</p>
-          <p className="mt-1 text-xs text-slate-500">{order.itemNames?.join(", ") || "Grocery order"}</p>
+          <p className="mt-1 text-xs text-slate-500">{formatOrderItems(order)}</p>
           <p
             className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusTone(order.status)}`}
           >

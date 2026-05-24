@@ -10,6 +10,10 @@ import {
   uploadCategoryImage,
   updateCategory,
 } from "../../services/productService";
+import {
+  getImageUploadSupportText,
+  validateImageUploadFile,
+} from "../../utils/imageUploadRules";
 
 const emptyForm = {
   name: "",
@@ -47,6 +51,7 @@ export default function ManageCategories() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const imageUploadSupportText = getImageUploadSupportText();
 
   useEffect(() => {
     async function loadCategories() {
@@ -157,6 +162,13 @@ export default function ManageCategories() {
       return;
     }
 
+    const invalidMessage = validateImageUploadFile(file);
+    if (invalidMessage) {
+      setError(invalidMessage);
+      event.target.value = "";
+      return;
+    }
+
     try {
       setUploadingImage(true);
       setError("");
@@ -253,11 +265,20 @@ export default function ManageCategories() {
                   key={category.id}
                   className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm"
                 >
-                  <img
-                    src={getCategoryPreview(category)}
-                    alt={category.name}
-                    className="h-40 w-full object-cover"
-                  />
+                  <div className="relative h-40 w-full overflow-hidden bg-slate-100">
+                    <img
+                      src={getCategoryPreview(category)}
+                      alt={category.name}
+                      className="h-40 w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                        event.currentTarget.nextElementSibling?.classList.remove("hidden");
+                      }}
+                    />
+                    <div className="absolute inset-0 flex hidden items-center justify-center bg-slate-100 px-4 text-center text-sm font-semibold text-slate-500">
+                      Category image unavailable
+                    </div>
+                  </div>
                   <div className="p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -346,6 +367,7 @@ export default function ManageCategories() {
                 <p className="text-xs text-slate-500">
                   Upload a JPG, PNG, or WEBP image for storefront cards and category landing views.
                 </p>
+                <p className="mt-1 text-xs text-slate-500">{imageUploadSupportText}</p>
               </div>
               <label className="cursor-pointer">
                 <input
@@ -361,12 +383,19 @@ export default function ManageCategories() {
               </label>
             </div>
             {form.imageUrl ? (
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
                 <img
                   src={getCategoryPreview(form)}
                   alt={form.name || "Category preview"}
                   className="h-40 w-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                    event.currentTarget.nextElementSibling?.classList.remove("hidden");
+                  }}
                 />
+                <div className="absolute inset-0 flex hidden items-center justify-center bg-slate-100 px-4 text-center text-sm font-semibold text-slate-500">
+                  Category image unavailable
+                </div>
               </div>
             ) : null}
           </div>

@@ -7,7 +7,11 @@ import Modal from "../../components/common/Modal";
 import { useAuth } from "../../context/AuthContext";
 import { removeProfileAvatar, uploadProfileAvatar } from "../../services/authService";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getImageUploadSupportText,
+  validateImageUploadFile,
+} from "../../utils/imageUploadRules";
 
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -76,15 +80,30 @@ export default function Profile() {
   const [avatarSource, setAvatarSource] = useState("");
   const [avatarZoom, setAvatarZoom] = useState(1);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  const imageUploadSupportText = getImageUploadSupportText();
 
   const handleLogout = () => {
     logout();
     navigate("/login", { replace: true });
   };
 
+  const userInitial = (session?.name || "A").charAt(0).toUpperCase();
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [session?.avatar]);
+
   const handleProfileImageChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) {
+      return;
+    }
+
+    const invalidMessage = validateImageUploadFile(file);
+    if (invalidMessage) {
+      setAvatarMessage(invalidMessage);
+      event.target.value = "";
       return;
     }
 
@@ -119,8 +138,11 @@ export default function Profile() {
       setAvatarSource("");
       setAvatarZoom(1);
       setAvatarMessage("Profile image updated successfully.");
-    } catch {
-      setAvatarMessage("Profile image could not be uploaded. Please try a smaller JPG, PNG, or WEBP image.");
+    } catch (error) {
+      setAvatarMessage(
+        error?.message ||
+          "Profile image could not be uploaded. Please try a smaller JPG, PNG, or WEBP image."
+      );
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -163,10 +185,21 @@ export default function Profile() {
           <h1 className="text-4xl font-black text-slate-950">My Profile</h1>
           <div className="mt-6 flex flex-wrap items-center gap-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             {session?.avatar ? (
-              <img src={session.avatar} alt="Profile" className="h-24 w-24 rounded-full object-cover" />
+              !avatarLoadFailed ? (
+                <img
+                  src={session.avatar}
+                  alt="Profile"
+                  className="h-24 w-24 rounded-full object-cover"
+                  onError={() => setAvatarLoadFailed(true)}
+                />
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-slate-950 text-3xl font-black text-yellow-400">
+                  {userInitial}
+                </div>
+              )
             ) : (
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-slate-950 text-3xl font-black text-yellow-400">
-                {(session?.name || "A").charAt(0).toUpperCase()}
+                {userInitial}
               </div>
             )}
             <div>
@@ -178,7 +211,12 @@ export default function Profile() {
                 }`}
               >
                 {session?.avatar ? "Change Profile Image" : isUploadingAvatar ? "Uploading..." : "Upload Profile Image"}
-                <input type="file" accept="image/*" className="hidden" onChange={handleProfileImageChange} />
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={handleProfileImageChange}
+                />
               </label>
               {session?.avatar ? (
                 <button
@@ -192,6 +230,7 @@ export default function Profile() {
                   {isRemovingAvatar ? "Removing..." : "Remove Avatar"}
                 </button>
               ) : null}
+              <p className="mt-3 text-sm text-slate-500">{imageUploadSupportText}</p>
               {avatarMessage ? <p className="mt-3 text-sm text-slate-500">{avatarMessage}</p> : null}
             </div>
           </div>

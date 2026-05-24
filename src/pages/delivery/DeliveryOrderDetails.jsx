@@ -8,6 +8,14 @@ import { fetchPaymentConfig } from "../../services/paymentService";
 import { getOrderStatusLabel, getOrderProgressSteps } from "../../utils/orderStatus";
 import { buildQrPreviewUrl, buildUpiPaymentLink } from "../../utils/payment";
 
+function formatOrderItems(order) {
+  if (order.orderItems?.length) {
+    return order.orderItems.map((item) => `${item.productName} x${item.quantity}`).join(", ");
+  }
+
+  return order.itemNames?.join(", ") || "Grocery order";
+}
+
 export default function DeliveryOrderDetails() {
   const { id } = useParams();
   const { orders, pickOrder, deliverOrder, refreshOrders } = useOrders();
@@ -172,9 +180,25 @@ export default function DeliveryOrderDetails() {
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Order value</p>
                   <p className="mt-2 font-black text-slate-950">Rs{order.totalAmount}</p>
-                  <p className="mt-1 text-sm text-slate-500">{order.itemNames?.join(", ") || "Grocery order"}</p>
+                  <p className="mt-1 text-sm text-slate-500">{formatOrderItems(order)}</p>
                 </div>
               </div>
+              {order.orderItems?.length ? (
+                <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Ordered items</p>
+                  <div className="mt-3 space-y-2">
+                    {order.orderItems.map((item) => (
+                      <div key={`${item.productId}-${item.productName}`} className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-3 text-sm">
+                        <div>
+                          <p className="font-semibold text-slate-900">{item.productName}</p>
+                          <p className="mt-1 text-xs text-slate-500">Qty {item.quantity}</p>
+                        </div>
+                        <p className="font-bold text-slate-900">Rs{item.lineTotal || item.price}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </section>
 

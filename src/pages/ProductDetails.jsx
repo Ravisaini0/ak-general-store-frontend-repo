@@ -25,6 +25,7 @@ export default function ProductDetails() {
   const [feedback, setFeedback] = useState("");
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
+  const [selectedImageFailed, setSelectedImageFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const wishlisted = product ? isWishlisted(product.id) : false;
@@ -41,6 +42,7 @@ export default function ProductDetails() {
           const nextProduct = await fetchProductById(id);
           setProduct(nextProduct);
           setSelectedImage(nextProduct.imageUrls?.[0] || nextProduct.imageUrl || getFallbackProductImage(nextProduct));
+          setSelectedImageFailed(false);
         }
       } catch (fetchError) {
         if (!cancelled) {
@@ -61,6 +63,10 @@ export default function ProductDetails() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    setSelectedImageFailed(false);
+  }, [selectedImage]);
 
   if (loading && !product) {
     return (
@@ -156,15 +162,18 @@ export default function ProductDetails() {
             <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5">
               <div className="rounded-[1.5rem] bg-gradient-to-br from-[#fff0c5] via-[#ffe18d] to-[#ffb637] p-8">
                 {activeImage ? (
-                  <img
-                    src={activeImage}
-                    alt={product.name}
-                    className="mx-auto h-64 w-full max-w-[260px] rounded-[1.75rem] object-cover shadow-lg sm:h-80"
-                    onError={(event) => {
-                      event.currentTarget.onerror = null;
-                      event.currentTarget.src = getFallbackProductImage(product);
-                    }}
-                  />
+                  !selectedImageFailed ? (
+                    <img
+                      src={activeImage}
+                      alt={product.name}
+                      className="mx-auto h-64 w-full max-w-[260px] rounded-[1.75rem] object-cover shadow-lg sm:h-80"
+                      onError={() => setSelectedImageFailed(true)}
+                    />
+                  ) : (
+                    <div className="mx-auto flex h-64 w-full max-w-[260px] items-center justify-center rounded-[1.75rem] border border-dashed border-slate-300 bg-white/70 px-4 text-center text-sm font-semibold text-slate-600 sm:h-80">
+                      Product image unavailable
+                    </div>
+                  )
                 ) : null}
               </div>
               {galleryImages.length > 1 ? (
@@ -185,7 +194,7 @@ export default function ProductDetails() {
                           className="h-16 w-full object-cover"
                           onError={(event) => {
                             event.currentTarget.onerror = null;
-                            event.currentTarget.src = getFallbackProductImage(product);
+                            event.currentTarget.style.display = "none";
                           }}
                         />
                       </button>

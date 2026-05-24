@@ -1,5 +1,13 @@
 import { getOrderStatusLabel } from "../../utils/orderStatus";
 
+function formatOrderItems(order) {
+  if (order.orderItems?.length) {
+    return order.orderItems.map((item) => `${item.productName} x${item.quantity}`).join(", ");
+  }
+
+  return order.itemNames?.join(", ") || "Grocery order";
+}
+
 function getStatusTone(status) {
   switch (status) {
     case "ORDER_PLACED":
@@ -49,7 +57,7 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Items</p>
-                <p className="mt-1">{order.itemNames?.join(", ") || "Grocery order"}</p>
+                <p className="mt-1">{formatOrderItems(order)}</p>
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Payment state</p>
@@ -192,9 +200,9 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
                     <span className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
                       Earn Rs.{Number(order.deliveryEarningAmount || 0).toFixed(0)}
                     </span>
-                    {order.itemNames?.length ? (
+                    {order.orderItems?.length || order.itemNames?.length ? (
                       <span className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">
-                        {order.itemNames.join(", ")}
+                        {formatOrderItems(order)}
                       </span>
                     ) : null}
                   </div>

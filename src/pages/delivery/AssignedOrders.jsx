@@ -3,6 +3,14 @@ import DeliveryLayout from "../../components/delivery/DeliveryLayout";
 import DeliveryOrderCard from "../../components/delivery/DeliveryOrderCard";
 import { useOrders } from "../../context/OrderContext";
 
+function formatOrderItems(order) {
+  if (order.orderItems?.length) {
+    return order.orderItems.map((item) => `${item.productName} x${item.quantity}`).join(", ");
+  }
+
+  return order.itemNames?.join(", ") || "Grocery order";
+}
+
 export default function AssignedOrders() {
   const { orders, pickOrder, refreshOrders } = useOrders();
   const readyOrders = orders.filter((order) => order.status === "ASSIGNED_TO_DELIVERY");
@@ -50,6 +58,9 @@ export default function AssignedOrders() {
                 <div className="text-sm text-slate-500">
                   <p>
                     Delivery address: <span className="font-semibold text-slate-700">{order.deliveryAddress || "Pending"}</span>
+                  </p>
+                  <p className="mt-1">
+                    Ordered items: <span className="font-semibold text-slate-700">{formatOrderItems(order)}</span>
                   </p>
                   <p className="mt-1">
                     Batch #{order.batchId || "-"} • Earn Rs.{Number(order.deliveryEarningAmount || 0).toFixed(0)}

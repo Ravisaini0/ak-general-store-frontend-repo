@@ -1,19 +1,35 @@
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { formatPrice } from "../../utils/formatPrice";
 import { getFallbackProductImage } from "../../utils/storeMappers";
 
 export default function CartItem({ item, onDecrease, onIncrease, onRemove }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [item.product.id, item.product.imageUrl]);
+
   return (
     <div className="card-surface flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-      <img
-        src={item.product.imageUrl || getFallbackProductImage(item.product)}
-        alt={item.product.name}
-        className="h-20 w-20 rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 object-cover"
-        onError={(event) => {
-          event.currentTarget.onerror = null;
-          event.currentTarget.src = getFallbackProductImage(item.product);
-        }}
-      />
+      {item.product.imageUrl && !imageFailed ? (
+        <img
+          src={item.product.imageUrl}
+          alt={item.product.name}
+          className="h-20 w-20 rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : item.product.imageUrl ? (
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-2 text-center text-[10px] font-semibold text-slate-500">
+          Image unavailable
+        </div>
+      ) : (
+        <img
+          src={getFallbackProductImage(item.product)}
+          alt={item.product.name}
+          className="h-20 w-20 rounded-2xl bg-gradient-to-br from-yellow-100 to-orange-100 object-cover"
+        />
+      )}
       <div className="w-full flex-1">
         <h3 className="font-bold text-slate-900">{item.product.name}</h3>
         <p className="text-sm text-slate-500">{item.product.unit}</p>

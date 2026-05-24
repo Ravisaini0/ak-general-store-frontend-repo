@@ -1,4 +1,5 @@
 import { Heart, ShoppingCart } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -22,6 +23,12 @@ export default function ProductCard({ product }) {
   const { session } = useAuth();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(product.id);
+  const fallbackImage = getFallbackProductImage(product);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [product.id, product.imageUrl]);
 
   return (
     <div className="rounded-[1.2rem] border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-soft sm:rounded-[1.35rem]">
@@ -47,7 +54,7 @@ export default function ProductCard({ product }) {
         >
           <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
         </button>
-        {product.imageUrl ? (
+        {product.imageUrl && !imageFailed ? (
           <img
             src={product.imageUrl}
             alt={product.name}
@@ -55,12 +62,16 @@ export default function ProductCard({ product }) {
             className="h-full w-full rounded-[0.95rem] object-cover shadow-sm"
             onError={(event) => {
               event.currentTarget.onerror = null;
-              event.currentTarget.src = getFallbackProductImage(product);
+              setImageFailed(true);
             }}
           />
+        ) : product.imageUrl ? (
+          <div className="flex h-full w-full items-center justify-center rounded-[0.95rem] border border-dashed border-slate-300 bg-white/70 px-3 text-center text-[11px] font-semibold text-slate-500 shadow-sm">
+            Product image unavailable
+          </div>
         ) : (
           <img
-            src={getFallbackProductImage(product)}
+            src={fallbackImage}
             alt={product.name}
             loading="lazy"
             className="h-full w-full rounded-[0.95rem] object-cover shadow-sm"
