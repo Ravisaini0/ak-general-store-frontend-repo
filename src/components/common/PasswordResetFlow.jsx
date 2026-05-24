@@ -40,6 +40,10 @@ export default function PasswordResetFlow({
   }, [verificationToken, maskedDestination]);
 
   const requestReset = async () => {
+    if (requesting) {
+      return;
+    }
+
     try {
       setRequesting(true);
       setError("");
@@ -59,6 +63,10 @@ export default function PasswordResetFlow({
   };
 
   const verifyResetCode = async () => {
+    if (verifying) {
+      return;
+    }
+
     try {
       setVerifying(true);
       setError("");
@@ -73,6 +81,10 @@ export default function PasswordResetFlow({
   };
 
   const submitNewPassword = async () => {
+    if (resetting) {
+      return;
+    }
+
     if (newPassword.length < 6) {
       setError("New password must be at least 6 characters.");
       return;
@@ -124,6 +136,7 @@ export default function PasswordResetFlow({
           className="w-full py-3 font-black"
           type="button"
           onClick={requestReset}
+          loading={requesting}
         >
           {requesting ? "Sending Code..." : "Send Reset Code"}
         </Button>
@@ -146,6 +159,7 @@ export default function PasswordResetFlow({
             className="w-full py-3 font-black"
             type="button"
             onClick={verifyResetCode}
+            loading={verifying}
           >
             {verifying ? "Verifying..." : "Verify Reset Code"}
           </Button>
@@ -172,6 +186,7 @@ export default function PasswordResetFlow({
             className="w-full py-3 font-black"
             type="button"
             onClick={submitNewPassword}
+            loading={resetting}
           >
             {resetting ? "Updating..." : "Update Password"}
           </Button>

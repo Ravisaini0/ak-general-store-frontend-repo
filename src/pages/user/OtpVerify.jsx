@@ -19,6 +19,8 @@ export default function OtpVerify() {
   const [message, setMessage] = useState(location.state?.otpHint || "");
   const [error, setError] = useState("");
   const [maskedDestination, setMaskedDestination] = useState(location.state?.maskedDestination || "");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const purpose = location.state?.purpose || "REGISTER";
   const pendingRegistration = useMemo(() => {
     try {
@@ -51,7 +53,12 @@ export default function OtpVerify() {
   }
 
   const handleVerify = async () => {
+    if (isVerifying) {
+      return;
+    }
+
     try {
+      setIsVerifying(true);
       setError("");
       if (isLoginFlow) {
         const verification = await verifyLoginOtp(identifier, otp);
@@ -73,11 +80,18 @@ export default function OtpVerify() {
       navigate(redirectTo, { replace: true });
     } catch (verifyError) {
       setError(verifyError.message || "OTP verification failed.");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
   const handleResend = async () => {
+    if (isResending) {
+      return;
+    }
+
     try {
+      setIsResending(true);
       setError("");
       const response = isLoginFlow
         ? await requestUserLoginOtp(pendingLogin.form)
@@ -86,6 +100,8 @@ export default function OtpVerify() {
       setMessage(response.hint || "A new OTP has been sent.");
     } catch (resendError) {
       setError(resendError.message || "OTP could not be sent again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -110,15 +126,25 @@ export default function OtpVerify() {
             value={otp}
             onChange={(event) => setOtp(event.target.value)}
           />
-          <Button variant="accent" className="w-full py-4 font-black" onClick={handleVerify}>
-            {isLoginFlow ? "Verify and Login" : "Verify and Create Account"}
+          <Button
+            variant="accent"
+            className="w-full py-4 font-black"
+            onClick={handleVerify}
+            loading={isVerifying}
+          >
+            {isVerifying
+              ? "Verifying OTP..."
+              : isLoginFlow
+                ? "Verify and Login"
+                : "Verify and Create Account"}
           </Button>
           <button
             type="button"
             onClick={handleResend}
+            disabled={isResending}
             className="w-full rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800"
           >
-            Resend OTP
+            {isResending ? "Sending OTP..." : "Resend OTP"}
           </button>
         </div>
 

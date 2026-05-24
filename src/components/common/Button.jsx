@@ -2,6 +2,8 @@ export default function Button({
   children,
   variant = "primary",
   className = "",
+  loading = false,
+  disabled = false,
   ...props
 }) {
   const base =
@@ -16,7 +18,12 @@ export default function Button({
   };
 
   return (
-    <button className={`${base} ${variants[variant]} ${className}`} {...props}>
+    <button
+      className={`${base} ${variants[variant]} ${className}`}
+      disabled={disabled || loading}
+      aria-busy={loading}
+      {...props}
+    >
       {children}
     </button>
   );

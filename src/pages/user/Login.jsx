@@ -14,6 +14,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const redirectTo = location.state?.from?.pathname || "/";
   const loginMessage = location.state?.loginMessage || "";
 
@@ -35,6 +36,9 @@ export default function Login() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
 
     if (!isValidEmail(form.email)) {
       setError("Please enter a valid email address.");
@@ -48,6 +52,7 @@ export default function Login() {
 
     try {
       setError("");
+      setIsSubmitting(true);
       const otpPayload = await requestUserLoginOtp(form);
 
       window.sessionStorage.setItem(
@@ -68,6 +73,8 @@ export default function Login() {
       });
     } catch (loginError) {
       setError(loginError.message || "Invalid email or password.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -113,9 +120,17 @@ export default function Login() {
             </span>
           </label>
         </div>
+        {isSubmitting ? (
+          <p className="mt-4 text-sm font-semibold text-amber-700">Sending OTP to your email...</p>
+        ) : null}
         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-        <Button variant="accent" className="mt-6 w-full py-4 font-black" type="submit">
-          Continue with OTP
+        <Button
+          variant="accent"
+          className="mt-6 w-full py-4 font-black"
+          type="submit"
+          loading={isSubmitting}
+        >
+          {isSubmitting ? "Sending OTP..." : "Continue with OTP"}
         </Button>
         <p className="mt-4 text-sm text-slate-500">
           New user? <Link to="/register" className="font-bold text-slate-900">Create account</Link>

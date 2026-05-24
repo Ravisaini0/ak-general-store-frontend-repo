@@ -118,7 +118,7 @@ export default function Register() {
         </label>
         {isSubmitting ? <p className="mt-4 text-sm font-semibold text-amber-700">Sending OTP to your email...</p> : null}
         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-        <Button variant="accent" className="mt-6 w-full py-4 font-black" type="submit" disabled={isSubmitting}>
+        <Button variant="accent" className="mt-6 w-full py-4 font-black" type="submit" loading={isSubmitting}>
           {isSubmitting ? "Sending OTP..." : "Register"}
         </Button>
         <p className="mt-4 text-sm text-slate-500">
