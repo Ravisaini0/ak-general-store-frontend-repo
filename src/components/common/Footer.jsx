@@ -3,7 +3,11 @@ import { Link } from "react-router-dom";
 import { usePublicStoreSettings } from "../../hooks/usePublicStoreSettings";
 
 export default function Footer() {
-  const { freeDeliveryThreshold, supportPhone } = usePublicStoreSettings();
+  const { storeName, freeDeliveryThreshold, supportPhone, supportEmail } = usePublicStoreSettings();
+  const whatsappDigits = String(supportPhone || "")
+    .replace(/\D/g, "")
+    .replace(/^0+/, "");
+  const whatsappHref = whatsappDigits ? `https://wa.me/91${whatsappDigits.slice(-10)}` : null;
   const shopLinks = [
     { label: "Home", to: "/" },
     { label: "Products", to: "/products" },
@@ -31,7 +35,7 @@ export default function Footer() {
                   AK
                 </div>
                 <div>
-                  <p className="text-lg font-black text-slate-950">AK General Store</p>
+                  <p className="text-lg font-black text-slate-950">{storeName}</p>
                   <p className="text-sm text-slate-500">
                     Fresh groceries, daily essentials, and fast local delivery
                   </p>
@@ -107,14 +111,18 @@ export default function Footer() {
                     <Phone className="mt-0.5 h-4 w-4 text-green-600" />
                     <div>
                       <p className="font-semibold text-slate-900">WhatsApp</p>
-                      <a
-                        href="https://wa.me/919483989109"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="transition hover:text-slate-950"
-                      >
-                        Chat on WhatsApp
-                      </a>
+                      {whatsappHref ? (
+                        <a
+                          href={whatsappHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="transition hover:text-slate-950"
+                        >
+                          Chat on WhatsApp
+                        </a>
+                      ) : (
+                        <span className="text-slate-500">WhatsApp not configured</span>
+                      )}
                     </div>
                   </div>
 
@@ -122,11 +130,8 @@ export default function Footer() {
                     <Mail className="mt-0.5 h-4 w-4 text-yellow-700" />
                     <div>
                       <p className="font-semibold text-slate-900">Email Support</p>
-                      <a
-                        href="mailto:support@akgeneralstore.com"
-                        className="break-all transition hover:text-slate-950"
-                      >
-                        support@akgeneralstore.com
+                      <a href={`mailto:${supportEmail}`} className="break-all transition hover:text-slate-950">
+                        {supportEmail}
                       </a>
                     </div>
                   </div>

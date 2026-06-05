@@ -18,7 +18,7 @@ import {
   verifyRazorpayPayment,
 } from "../services/paymentService";
 import { fetchAddresses } from "../services/addressService";
-import { validateCouponCode } from "../services/couponService";
+import { fetchPublicCoupons, validateCouponCode } from "../services/couponService";
 import { fetchProducts } from "../services/productService";
 import { fetchPublicStoreSettings } from "../services/storeService";
 import { formatPrice } from "../utils/formatPrice";
@@ -42,6 +42,15 @@ function formatAddressType(value) {
   }
 
   return value.charAt(0) + value.slice(1).toLowerCase();
+}
+
+function buildCouponHint(coupon) {
+  const minimumOrderAmount = Number(coupon?.minimumOrderAmount || 0);
+  if (minimumOrderAmount > 0) {
+    return `Min cart Rs${minimumOrderAmount}`;
+  }
+
+  return "Available now";
 }
 
 export default function Checkout() {
@@ -89,6 +98,7 @@ export default function Checkout() {
   });
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponOffers, setCouponOffers] = useState([]);
   const [couponMessage, setCouponMessage] = useState("");
   const [couponError, setCouponError] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
@@ -120,7 +130,7 @@ export default function Checkout() {
   useEffect(() => {
     async function loadPaymentAndStoreMeta() {
       try {
-        const [config, settings] = await Promise.all([
+        const [config, settings, liveCoupons] = await Promise.all([
           fetchPaymentConfig().catch(() => ({
             razorpayEnabled: false,
             razorpayKeyId: "",
@@ -138,6 +148,7 @@ export default function Checkout() {
             storeLocations: "",
             enabledPayments: "COD,UPI,RAZORPAY",
           })),
+          fetchPublicCoupons().catch(() => []),
         ]);
 
         setPaymentConfig(config);
@@ -148,6 +159,7 @@ export default function Checkout() {
           storeLocations: settings.storeLocations || "",
           enabledPayments: settings.enabledPayments || "COD,UPI,RAZORPAY",
         });
+        setCouponOffers(Array.isArray(liveCoupons) ? liveCoupons : []);
       } catch {
         setPaymentConfig({
           razorpayEnabled: false,
@@ -166,6 +178,7 @@ export default function Checkout() {
           storeLocations: "",
           enabledPayments: "COD,UPI,RAZORPAY",
         });
+        setCouponOffers([]);
       }
     }
 
@@ -883,9 +896,25 @@ export default function Checkout() {
                 </Button>
               </div>
               <p className="mt-3 text-xs text-slate-500">
-                Try demo codes: <span className="font-bold text-slate-900">AK50</span> or{" "}
-                <span className="font-bold text-slate-900">FIRST10</span>
+                {couponOffers.length
+                  ? "Live coupons from admin settings:"
+                  : "Active coupons will appear here after admin adds them."}
               </p>
+              {couponOffers.length ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {couponOffers.slice(0, 3).map((coupon) => (
+                    <button
+                      key={coupon.code}
+                      type="button"
+                      onClick={() => setCouponCode(String(coupon.code || "").toUpperCase())}
+                      className="rounded-xl border border-dashed border-yellow-300 bg-white px-3 py-2 text-left text-xs text-slate-600 transition hover:border-yellow-400 hover:bg-yellow-50"
+                    >
+                      <span className="block font-black text-slate-900">{coupon.code}</span>
+                      <span>{buildCouponHint(coupon)}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               {couponMessage ? (
                 <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
                   {couponMessage}

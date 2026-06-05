@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Button from "../../components/common/Button";
 import DeliveryLayout from "../../components/delivery/DeliveryLayout";
 import { useOrders } from "../../context/OrderContext";
+import { usePublicStoreSettings } from "../../hooks/usePublicStoreSettings";
 import { requestWeeklyWithdrawal } from "../../services/deliveryService";
 
 function sumEarnings(orders) {
@@ -34,9 +35,15 @@ function formatDateTime(value) {
 
 export default function DeliveryEarnings() {
   const { orders, refreshOrders } = useOrders();
+  const {
+    deliveryBasePayoutAmount: basePayoutValue,
+    deliveryAdditionalPayoutAmount: additionalPayoutValue,
+  } = usePublicStoreSettings();
   const [actionError, setActionError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [requesting, setRequesting] = useState(false);
+  const basePayout = Number(basePayoutValue || 20);
+  const additionalPayout = Number(additionalPayoutValue || 10);
 
   const completedOrders = useMemo(
     () => orders.filter((order) => order.status === "ORDER_COMPLETED"),
@@ -98,8 +105,7 @@ export default function DeliveryEarnings() {
     availableForWithdrawal > 0 &&
     (!nextWithdrawalDate || new Date() >= nextWithdrawalDate);
 
-  const earningRuleText =
-    "Single live route order pays Rs20. If you carry more orders on the same active route, each extra order pays Rs10.";
+  const earningRuleText = `Single live route order pays Rs${basePayout}. If you carry more orders on the same active route, each extra order pays Rs${additionalPayout}.`;
 
   return (
     <DeliveryLayout
@@ -215,8 +221,10 @@ export default function DeliveryEarnings() {
             <div className="mt-3 flex items-start gap-3">
               <BadgeIndianRupee className="mt-0.5 h-4 w-4 text-slate-500" />
               <p>
-                Fixed route rule: the first active order pays <span className="font-black text-slate-900">Rs20</span>, and
-                every extra same-route order pays <span className="font-black text-slate-900">Rs10</span>.
+                Fixed route rule: the first active order pays{" "}
+                <span className="font-black text-slate-900">Rs{basePayout}</span>, and every extra
+                same-route order pays{" "}
+                <span className="font-black text-slate-900">Rs{additionalPayout}</span>.
               </p>
             </div>
           </div>
