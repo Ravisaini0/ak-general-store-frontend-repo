@@ -1,7 +1,9 @@
 import { Clock3, LockKeyhole, MapPinned, Mail, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import { usePublicStoreSettings } from "../../hooks/usePublicStoreSettings";
 
 export default function Footer() {
+  const { freeDeliveryThreshold, supportPhone } = usePublicStoreSettings();
   const shopLinks = [
     { label: "Home", to: "/" },
     { label: "Products", to: "/products" },
@@ -44,7 +46,7 @@ export default function Footer() {
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <span className="rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-xs font-bold text-slate-800">
-                  Free delivery above Rs299
+                  Free delivery above Rs{freeDeliveryThreshold}
                 </span>
                 <span className="rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-xs font-bold text-slate-800">
                   Support available 24/7
@@ -95,8 +97,8 @@ export default function Footer() {
                     <Phone className="mt-0.5 h-4 w-4 text-yellow-700" />
                     <div>
                       <p className="font-semibold text-slate-900">Call Support</p>
-                      <a href="tel:9483989109" className="transition hover:text-slate-950">
-                        9483989109
+                      <a href={`tel:${supportPhone}`} className="transition hover:text-slate-950">
+                        {supportPhone}
                       </a>
                     </div>
                   </div>

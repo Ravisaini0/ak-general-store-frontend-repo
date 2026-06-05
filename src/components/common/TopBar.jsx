@@ -1,11 +1,13 @@
 import { BadgePercent, CircleHelp, Clock3, Phone } from "lucide-react";
+import { usePublicStoreSettings } from "../../hooks/usePublicStoreSettings";
 
 export default function TopBar() {
+  const { freeDeliveryThreshold, supportPhone } = usePublicStoreSettings();
   const items = [
     { icon: BadgePercent, label: "Welcome to A K General Store" },
     { icon: Clock3, label: "Support available 24/7" },
-    { icon: BadgePercent, label: "Free Delivery above Rs299" },
-    { icon: Phone, label: "Need Help? 9483989109" },
+    { icon: BadgePercent, label: `Free Delivery above Rs${freeDeliveryThreshold}` },
+    { icon: Phone, label: `Need Help? ${supportPhone}` },
     { icon: CircleHelp, label: "Fresh Flour Service Available" },
   ];
 

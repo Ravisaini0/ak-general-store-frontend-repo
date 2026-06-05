@@ -1,13 +1,53 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
+import { fetchPublicStoreSettings } from "../../services/storeService";
 import { formatPrice } from "../../utils/formatPrice";
 
 export default function CartSummary() {
   const { totalAmount, totalItems } = useCart();
   const { session } = useAuth();
   const navigate = useNavigate();
-  const deliveryFee = totalAmount > 499 || totalAmount === 0 ? 0 : 40;
+  const [storeSettings, setStoreSettings] = useState({
+    freeDeliveryThreshold: "299",
+    deliveryCharge: "40",
+  });
+  const freeDeliveryThreshold = Number(storeSettings.freeDeliveryThreshold || 299);
+  const standardDeliveryCharge = Number(storeSettings.deliveryCharge || 40);
+  const deliveryFee =
+    totalAmount === 0 || totalAmount >= freeDeliveryThreshold ? 0 : standardDeliveryCharge;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadStoreSettings() {
+      try {
+        const response = await fetchPublicStoreSettings();
+        if (cancelled) {
+          return;
+        }
+
+        setStoreSettings({
+          freeDeliveryThreshold: response.freeDeliveryThreshold || "299",
+          deliveryCharge: response.deliveryCharge || "40",
+        });
+      } catch {
+        if (!cancelled) {
+          setStoreSettings({
+            freeDeliveryThreshold: "299",
+            deliveryCharge: "40",
+          });
+        }
+      }
+    }
+
+    loadStoreSettings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleCheckout = () => {
     if (!totalItems) {
@@ -51,7 +91,7 @@ export default function CartSummary() {
         {totalItems ? "Proceed to Checkout" : "Add Products First"}
       </button>
       <p className="mt-3 text-center text-xs text-slate-500">
-        Address and payment details are completed on the next page.
+        Free delivery above {formatPrice(freeDeliveryThreshold)}. Address and payment details are completed on the next page.
       </p>
     </aside>
   );

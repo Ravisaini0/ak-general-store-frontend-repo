@@ -15,10 +15,12 @@ import TopBar from "../components/common/TopBar";
 import BottomCartBar from "../components/cart/BottomCartBar";
 import CategoryCard from "../components/product/CategoryCard";
 import ProductGrid from "../components/product/ProductGrid";
+import { usePublicStoreSettings } from "../hooks/usePublicStoreSettings";
 import { useStoreData } from "../hooks/useStoreData";
 
 export default function Home() {
   const { categories, products, loading, error, backendReady } = useStoreData();
+  const { freeDeliveryThreshold } = usePublicStoreSettings();
   const bestSelling = products.slice(0, 6);
   const heroImage =
     "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80";
@@ -41,7 +43,7 @@ export default function Home() {
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <span className="store-chip"><Clock3 className="h-4 w-4" />10-30 min delivery</span>
-                <span className="store-chip"><Truck className="h-4 w-4" />Free delivery above Rs299</span>
+                <span className="store-chip"><Truck className="h-4 w-4" />Free delivery above Rs{freeDeliveryThreshold}</span>
                 <span className="store-chip"><ShieldCheck className="h-4 w-4" />Trusted quality</span>
               </div>
               <div className="mt-6 flex flex-wrap gap-3">
@@ -141,7 +143,7 @@ export default function Home() {
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {[
             { title: "10-30 min Delivery", subtitle: "Trusted local shopping experience", icon: Truck },
-            { title: "Free Delivery", subtitle: "On qualifying orders above Rs299", icon: Clock3 },
+            { title: "Free Delivery", subtitle: `On qualifying orders above Rs${freeDeliveryThreshold}`, icon: Clock3 },
             { title: "Cash on Delivery", subtitle: "Pay safely at your doorstep", icon: IndianRupee },
             { title: "UPI Payment", subtitle: "Fast and simple digital checkout", icon: CreditCard },
             { title: "Quality Products", subtitle: "Carefully selected grocery essentials", icon: BadgeCheck },

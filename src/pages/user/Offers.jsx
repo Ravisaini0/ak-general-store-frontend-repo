@@ -4,29 +4,31 @@ import Header from "../../components/common/Header";
 import TopBar from "../../components/common/TopBar";
 import BackButton from "../../components/common/BackButton";
 import { Link } from "react-router-dom";
-
-const offers = [
-  {
-    title: "Flat Rs50 Off",
-    code: "AK50",
-    description: "Get instant savings on grocery carts above Rs499.",
-    icon: Ticket,
-  },
-  {
-    title: "First Order 10% Off",
-    code: "FIRST10",
-    description: "New customers can unlock 10% savings on their first order.",
-    icon: Percent,
-  },
-  {
-    title: "Free Delivery Above Rs299",
-    code: "AUTO",
-    description: "Delivery charges are waived automatically when your cart crosses the threshold.",
-    icon: Truck,
-  },
-];
+import { usePublicStoreSettings } from "../../hooks/usePublicStoreSettings";
 
 export default function Offers() {
+  const { freeDeliveryThreshold } = usePublicStoreSettings();
+  const offers = [
+    {
+      title: "Flat Rs50 Off",
+      code: "AK50",
+      description: "Get instant savings on grocery carts above Rs499.",
+      icon: Ticket,
+    },
+    {
+      title: "First Order 10% Off",
+      code: "FIRST10",
+      description: "New customers can unlock 10% savings on their first order.",
+      icon: Percent,
+    },
+    {
+      title: `Free Delivery Above Rs${freeDeliveryThreshold}`,
+      code: "AUTO",
+      description: "Delivery charges are waived automatically when your cart crosses the threshold.",
+      icon: Truck,
+    },
+  ];
+
   return (
     <div className="page-shell">
       <TopBar />

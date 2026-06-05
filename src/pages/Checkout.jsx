@@ -49,7 +49,6 @@ export default function Checkout() {
   const { session } = useAuth();
   const { totalAmount, cartItems, clearCart } = useCart();
   const { placeOrder, syncOrder } = useOrders();
-  const deliveryFee = totalAmount > 499 || totalAmount === 0 ? 0 : 40;
   const subtotalAmount = totalAmount;
   const [form, setForm] = useState({
     fullName: "",
@@ -66,6 +65,8 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [serviceSettings, setServiceSettings] = useState({
+    freeDeliveryThreshold: "299",
+    deliveryCharge: "40",
     serviceRadiusKm: "25",
     storeLocations: "",
     enabledPayments: "COD,UPI,RAZORPAY",
@@ -93,6 +94,10 @@ export default function Checkout() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   const discountAmount = Number(appliedCoupon?.discountAmount || 0);
+  const freeDeliveryThreshold = Number(serviceSettings.freeDeliveryThreshold || 299);
+  const standardDeliveryCharge = Number(serviceSettings.deliveryCharge || 40);
+  const deliveryFee =
+    subtotalAmount === 0 || subtotalAmount >= freeDeliveryThreshold ? 0 : standardDeliveryCharge;
   const grandTotal = Math.max(0, subtotalAmount + deliveryFee - discountAmount);
   const serviceRadiusKm = Number(serviceSettings.serviceRadiusKm || 25);
   const parsedStores = parseStoreLocations(serviceSettings.storeLocations, serviceRadiusKm);
@@ -127,6 +132,8 @@ export default function Checkout() {
             deliveryAdditionalPayoutAmount: "10",
           })),
           fetchPublicStoreSettings().catch(() => ({
+            freeDeliveryThreshold: "299",
+            deliveryCharge: "40",
             serviceRadiusKm: "25",
             storeLocations: "",
             enabledPayments: "COD,UPI,RAZORPAY",
@@ -135,6 +142,8 @@ export default function Checkout() {
 
         setPaymentConfig(config);
         setServiceSettings({
+          freeDeliveryThreshold: settings.freeDeliveryThreshold || "299",
+          deliveryCharge: settings.deliveryCharge || "40",
           serviceRadiusKm: settings.serviceRadiusKm || "25",
           storeLocations: settings.storeLocations || "",
           enabledPayments: settings.enabledPayments || "COD,UPI,RAZORPAY",
@@ -151,6 +160,8 @@ export default function Checkout() {
           deliveryAdditionalPayoutAmount: "10",
         });
         setServiceSettings({
+          freeDeliveryThreshold: "299",
+          deliveryCharge: "40",
           serviceRadiusKm: "25",
           storeLocations: "",
           enabledPayments: "COD,UPI,RAZORPAY",
