@@ -8,6 +8,7 @@ import TopBar from "../components/common/TopBar";
 import BottomCartBar from "../components/cart/BottomCartBar";
 import ProductGrid from "../components/product/ProductGrid";
 import { useStoreData } from "../hooks/useStoreData";
+import { groupProductsByFamily } from "../utils/catalogStructure";
 import { sortProductsBySearchRelevance } from "../utils/search";
 
 export default function ProductListing() {
@@ -61,6 +62,19 @@ export default function ProductListing() {
 
     return sorted;
   }, [categories, category, filterMode, products, search, sortMode]);
+
+  const groupedProducts = useMemo(() => {
+    if (!category) {
+      return [];
+    }
+
+    return groupProductsByFamily(filteredProducts);
+  }, [category, filteredProducts]);
+
+  const hasStructuredGroups = useMemo(
+    () => groupedProducts.some((group) => group.structured),
+    [groupedProducts]
+  );
 
   return (
     <div className="page-shell">
@@ -131,7 +145,29 @@ export default function ProductListing() {
             </div>
           ) : null}
           {filteredProducts.length ? (
-            <ProductGrid products={filteredProducts} />
+            category && hasStructuredGroups ? (
+              <div className="space-y-8">
+                <div className="rounded-[1.35rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                  This category is structured by product family so customers can quickly browse
+                  sections like Parle-G, Good Day, or Kurkure.
+                </div>
+                {groupedProducts.map((group) => (
+                  <section key={group.key}>
+                    <div className="mb-4 flex items-end justify-between gap-3">
+                      <div>
+                        <h2 className="text-xl font-black text-slate-950">{group.title}</h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {group.items.length} item{group.items.length === 1 ? "" : "s"} in this section
+                        </p>
+                      </div>
+                    </div>
+                    <ProductGrid products={group.items} />
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <ProductGrid products={filteredProducts} />
+            )
           ) : (
             <div className="soft-panel p-8 text-center">
               <p className="text-lg font-black text-slate-900">No products matched your search.</p>

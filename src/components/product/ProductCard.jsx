@@ -25,6 +25,8 @@ export default function ProductCard({ product }) {
   const wishlisted = isWishlisted(product.id);
   const fallbackImage = getFallbackProductImage(product);
   const [imageFailed, setImageFailed] = useState(false);
+  const displayName = product.catalogDisplayName || product.name;
+  const familyName = product.catalogFamilyName || "";
 
   useEffect(() => {
     setImageFailed(false);
@@ -81,8 +83,13 @@ export default function ProductCard({ product }) {
       <div className="space-y-2 px-1 pt-3">
         <div className="flex items-start justify-between gap-2">
           <div>
+            {familyName ? (
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                {familyName}
+              </p>
+            ) : null}
             <Link to={`/product/${product.id}`} className="text-sm font-bold text-slate-950">
-              {product.name}
+              {displayName}
             </Link>
             <p className="text-xs text-slate-500">{product.unit}</p>
           </div>

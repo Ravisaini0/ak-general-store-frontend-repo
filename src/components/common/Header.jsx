@@ -22,7 +22,7 @@ export default function Header() {
     { label: "Lentils & Pulses", to: "/category/dal" },
     { label: "Oil & Ghee", to: "/category/oil" },
     { label: "Spices & Seasoning", to: "/category/masala" },
-    { label: "Snacks & Biscuits", to: "/category/snacks" },
+    { label: "Biscuits & Snacks", to: "/category/snacks" },
     { label: "Daily Essentials", to: "/products" },
     { label: "Fresh Flour Service", to: "/aata-chakki-booking" },
   ];

@@ -17,6 +17,7 @@ import {
   PRODUCT_IMAGE_MAX_BYTES,
   validateImageUploadFile,
 } from "../../utils/imageUploadRules";
+import { parseProductCatalogStructure } from "../../utils/catalogStructure";
 import { getFallbackProductImage } from "../../utils/storeMappers";
 
 const emptyForm = {
@@ -67,6 +68,7 @@ export default function ManageProducts() {
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [featuredFilter, setFeaturedFilter] = useState("ALL");
   const imageUploadSupportText = getImageUploadSupportText(PRODUCT_IMAGE_MAX_BYTES);
+  const namingPreview = parseProductCatalogStructure(form.name);
 
   const categoryMap = useMemo(
     () => Object.fromEntries(categories.map((category) => [category.id, category.name])),
@@ -411,6 +413,11 @@ export default function ManageProducts() {
                           <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
                             {categoryName}
                           </p>
+                          {product.name.includes(" - ") ? (
+                            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-yellow-700">
+                              Structured family item
+                            </p>
+                          ) : null}
                           <h2 className="mt-2 truncate text-xl font-black text-slate-950">
                             {product.name}
                           </h2>
@@ -491,6 +498,18 @@ export default function ManageProducts() {
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
           />
+          <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            For category-inside-category structure, use product names like{" "}
+            <span className="font-black text-slate-900">Parle-G - Mini Pack</span>,{" "}
+            <span className="font-black text-slate-900">Parle-G - Family Pack</span>,{" "}
+            <span className="font-black text-slate-900">Good Day - Mini Pack</span>.
+            {namingPreview.structured ? (
+              <span className="mt-2 block text-xs text-slate-500">
+                Preview: family <span className="font-bold text-slate-900">{namingPreview.familyName}</span> / item{" "}
+                <span className="font-bold text-slate-900">{namingPreview.displayName}</span>
+              </span>
+            ) : null}
+          </div>
           <textarea
             className="store-input min-h-[120px] md:col-span-2"
             placeholder="Description"

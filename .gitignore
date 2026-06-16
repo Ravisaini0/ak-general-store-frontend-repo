@@ -11,3 +11,4 @@ dist/
 !index.html
 
 .vercel
+.idea/
