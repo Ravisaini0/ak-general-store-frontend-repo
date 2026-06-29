@@ -1,4 +1,11 @@
-export default function Loader() {
+export default function Loader({ progress = {} }) {
+  const total = Number(progress.total || 4);
+  const completed = Number(progress.completed || 0);
+  const percent = Math.max(8, Math.min(100, Math.round((completed / total) * 100)));
+  const statusText = progress.retrying
+    ? progress.message || "Backend is starting. Retrying..."
+    : `Checking ${progress.currentLabel || "backend"}...`;
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#050505] px-4 text-white">
       <div className="w-full max-w-sm rounded-[2rem] border border-yellow-500/20 bg-[radial-gradient(circle_at_bottom,_rgba(250,204,21,0.18),_transparent_36%),linear-gradient(180deg,_#0b0b0b,_#111111)] p-8 shadow-2xl">
@@ -16,15 +23,17 @@ export default function Loader() {
         </div>
         <div className="mt-8">
           <div className="flex items-center justify-between text-sm text-yellow-100">
-            <span>Loading...</span>
-            <span>85%</span>
+            <span>{statusText}</span>
+            <span>{percent}%</span>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full w-[85%] rounded-full bg-yellow-400" />
+            <div className="h-full rounded-full bg-yellow-400 transition-all duration-500" style={{ width: `${percent}%` }} />
           </div>
         </div>
         <p className="mt-6 text-center text-xs text-slate-400">
-          Preparing your best shopping experience
+          {progress.retrying
+            ? `Attempt ${progress.attempt || 1}: waiting for live API response`
+            : "Preparing live products, categories, and store settings"}
         </p>
       </div>
     </div>

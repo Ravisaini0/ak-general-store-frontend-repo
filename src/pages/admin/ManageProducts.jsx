@@ -1,9 +1,10 @@
-import { Boxes, ImagePlus, Search, Sparkles, Tag } from "lucide-react";
+import { Boxes, FileDown, ImagePlus, Search, Sparkles, Tag, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import {
+  bulkImportProducts,
   createProduct,
   deleteProduct,
   fetchCategories,
@@ -18,6 +19,11 @@ import {
   validateImageUploadFile,
 } from "../../utils/imageUploadRules";
 import { parseProductCatalogStructure } from "../../utils/catalogStructure";
+import {
+  buildSampleProductCsv,
+  parseProductImportFile,
+  validateProductImportRows,
+} from "../../utils/productBulkImport";
 import { getFallbackProductImage } from "../../utils/storeMappers";
 
 const emptyForm = {
@@ -64,6 +70,12 @@ export default function ManageProducts() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadFeedback, setUploadFeedback] = useState({ type: "", message: "" });
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkRows, setBulkRows] = useState([]);
+  const [bulkErrors, setBulkErrors] = useState([]);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkParsing, setBulkParsing] = useState(false);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [featuredFilter, setFeaturedFilter] = useState("ALL");
@@ -129,6 +141,13 @@ export default function ManageProducts() {
     setError("");
     setUploadFeedback({ type: "", message: "" });
     setShowModal(true);
+  };
+
+  const openBulkModal = () => {
+    setBulkRows([]);
+    setBulkErrors([]);
+    setBulkResult(null);
+    setShowBulkModal(true);
   };
 
   const openEditModal = (product) => {
@@ -245,6 +264,68 @@ export default function ManageProducts() {
     }
   };
 
+  const handleBulkFileChange = async (event) => {
+    const [file] = Array.from(event.target.files || []);
+    if (!file) {
+      return;
+    }
+
+    try {
+      setBulkParsing(true);
+      setBulkResult(null);
+      setBulkErrors([]);
+      const parsedRows = await parseProductImportFile(file, categories);
+      const validationErrors = validateProductImportRows(parsedRows);
+      setBulkRows(parsedRows);
+      setBulkErrors(validationErrors);
+    } catch (parseError) {
+      setBulkRows([]);
+      setBulkErrors([parseError.message || "Import file could not be read."]);
+    } finally {
+      setBulkParsing(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleBulkImport = async () => {
+    const validationErrors = validateProductImportRows(bulkRows);
+    if (validationErrors.length) {
+      setBulkErrors(validationErrors);
+      return;
+    }
+
+    try {
+      setBulkImporting(true);
+      setBulkResult(null);
+      setBulkErrors([]);
+      const result = await bulkImportProducts(bulkRows);
+      setBulkResult(result);
+      setProducts((current) => {
+        const importedMap = new Map((result.products || []).map((product) => [product.id, product]));
+        const merged = current.map((product) => importedMap.get(product.id) || product);
+        const existingIds = new Set(current.map((product) => product.id));
+        const createdProducts = (result.products || []).filter((product) => !existingIds.has(product.id));
+        return [...createdProducts, ...merged];
+      });
+      setBulkErrors(result.errors || []);
+    } catch (importError) {
+      setBulkErrors([importError.message || "Bulk import could not be completed."]);
+    } finally {
+      setBulkImporting(false);
+    }
+  };
+
+  const handleDownloadSampleCsv = () => {
+    const csv = buildSampleProductCsv(categories);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ak-products-import-sample.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const updateImageUrl = (index, value) => {
     setForm((current) => {
       const nextImageUrls = [...current.imageUrls];
@@ -303,14 +384,24 @@ export default function ManageProducts() {
                   Operate the live product catalog with better inventory visibility, gallery control, and category-level merchandising.
                 </p>
               </div>
-              <Button
-                variant="accent"
-                className="w-full gap-2 px-5 py-3 font-black sm:w-auto"
-                onClick={openCreateModal}
-              >
-                <ImagePlus className="h-4 w-4" />
-                Add Product
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  variant="ghost"
+                  className="w-full gap-2 px-5 py-3 font-black sm:w-auto"
+                  onClick={openBulkModal}
+                >
+                  <Upload className="h-4 w-4" />
+                  Bulk Import
+                </Button>
+                <Button
+                  variant="accent"
+                  className="w-full gap-2 px-5 py-3 font-black sm:w-auto"
+                  onClick={openCreateModal}
+                >
+                  <ImagePlus className="h-4 w-4" />
+                  Add Product
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -687,6 +778,115 @@ export default function ManageProducts() {
             {submitting ? "Saving..." : editingProduct ? "Update Product" : "Create Product"}
           </Button>
         </form>
+      </Modal>
+
+      <Modal
+        open={showBulkModal}
+        title="Bulk Import Products"
+        onClose={() => {
+          if (!bulkImporting) {
+            setShowBulkModal(false);
+          }
+        }}
+      >
+        <div className="grid gap-4">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            Upload CSV or JSON with columns: name, description, price, originalPrice, unit,
+            categoryId or categoryName, imageUrl, imageUrls, featured. Use imageUrls separated by
+            | for multiple images.
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white">
+              <Upload className="h-4 w-4" />
+              {bulkParsing ? "Reading file..." : "Choose CSV / JSON"}
+              <input
+                type="file"
+                accept=".csv,.json,text/csv,application/json"
+                className="hidden"
+                onChange={handleBulkFileChange}
+                disabled={bulkParsing || bulkImporting}
+              />
+            </label>
+            <Button
+              type="button"
+              variant="ghost"
+              className="gap-2"
+              onClick={handleDownloadSampleCsv}
+              disabled={bulkImporting}
+            >
+              <FileDown className="h-4 w-4" />
+              Download Sample CSV
+            </Button>
+          </div>
+
+          {bulkRows.length ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-black text-slate-950">{bulkRows.length} products ready</p>
+                <Button
+                  type="button"
+                  variant="accent"
+                  className="px-5 py-2 font-black"
+                  onClick={handleBulkImport}
+                  disabled={bulkImporting || bulkErrors.length > 0}
+                >
+                  {bulkImporting ? "Importing..." : "Import Products"}
+                </Button>
+              </div>
+              <div className="mt-4 max-h-64 overflow-y-auto rounded-xl border border-slate-100">
+                <table className="w-full min-w-[720px] text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2">Name</th>
+                      <th className="px-3 py-2">Category</th>
+                      <th className="px-3 py-2">Unit</th>
+                      <th className="px-3 py-2">Price</th>
+                      <th className="px-3 py-2">Featured</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkRows.slice(0, 25).map((row, index) => (
+                      <tr key={`${row.name}-${index}`} className="border-t border-slate-100">
+                        <td className="px-3 py-2 font-semibold text-slate-900">{row.name || "-"}</td>
+                        <td className="px-3 py-2 text-slate-600">
+                          {categoryMap[row.categoryId] || row.categoryId || "-"}
+                        </td>
+                        <td className="px-3 py-2 text-slate-600">{row.unit || "-"}</td>
+                        <td className="px-3 py-2 text-slate-600">{formatPrice(row.price)}</td>
+                        <td className="px-3 py-2 text-slate-600">{row.featured ? "Yes" : "No"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {bulkRows.length > 25 ? (
+                <p className="mt-2 text-xs text-slate-500">Showing first 25 rows only.</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {bulkResult ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              Imported {bulkResult.totalRows} rows. Created {bulkResult.createdCount}, updated{" "}
+              {bulkResult.updatedCount}, failed {bulkResult.failedCount}.
+            </div>
+          ) : null}
+
+          {bulkErrors.length ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <p className="font-black">Please fix these rows before importing:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {bulkErrors.slice(0, 8).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              {bulkErrors.length > 8 ? (
+                <p className="mt-2 text-xs">Showing first 8 errors.</p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </Modal>
     </div>
   );

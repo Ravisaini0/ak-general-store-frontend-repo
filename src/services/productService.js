@@ -31,6 +31,18 @@ export async function createProduct(payload) {
   return mapProduct(response.data);
 }
 
+export async function bulkImportProducts(payload) {
+  const response = await apiFetch("/api/admin/products/bulk-import", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return {
+    ...response.data,
+    products: (response.data?.products || []).map(mapProduct),
+  };
+}
+
 export async function updateProduct(id, payload) {
   const response = await apiFetch(`/api/admin/products/${id}`, {
     method: "PUT",
