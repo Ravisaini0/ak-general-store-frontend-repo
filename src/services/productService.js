@@ -80,6 +80,18 @@ export async function createCategory(payload) {
   return mapCategory(response.data);
 }
 
+export async function bulkImportCategories(payload) {
+  const response = await apiFetch("/api/admin/categories/bulk-import", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return {
+    ...response.data,
+    categories: (response.data?.categories || []).map(mapCategory),
+  };
+}
+
 export async function updateCategory(id, payload) {
   const response = await apiFetch(`/api/admin/categories/${id}`, {
     method: "PUT",

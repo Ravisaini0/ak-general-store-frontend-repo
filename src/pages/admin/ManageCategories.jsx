@@ -1,9 +1,10 @@
-import { FolderTree, ImagePlus, Layers3, Search, ShieldCheck } from "lucide-react";
+import { FileDown, FolderTree, ImagePlus, Layers3, Search, ShieldCheck, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import {
+  bulkImportCategories,
   createCategory,
   deleteCategory,
   fetchCategories,
@@ -15,6 +16,11 @@ import {
   getImageUploadSupportText,
   validateImageUploadFile,
 } from "../../utils/imageUploadRules";
+import {
+  buildSampleCategoryCsv,
+  parseCategoryImportFile,
+  validateCategoryImportRows,
+} from "../../utils/categoryBulkImport";
 
 const emptyForm = {
   name: "",
@@ -51,6 +57,12 @@ export default function ManageCategories() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadFeedback, setUploadFeedback] = useState({ type: "", message: "" });
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkRows, setBulkRows] = useState([]);
+  const [bulkErrors, setBulkErrors] = useState([]);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkParsing, setBulkParsing] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const imageUploadSupportText = getImageUploadSupportText(CATEGORY_IMAGE_MAX_BYTES);
@@ -100,6 +112,13 @@ export default function ManageCategories() {
     setForm(emptyForm);
     setUploadFeedback({ type: "", message: "" });
     setShowModal(true);
+  };
+
+  const openBulkModal = () => {
+    setBulkRows([]);
+    setBulkErrors([]);
+    setBulkResult(null);
+    setShowBulkModal(true);
   };
 
   const openEditModal = (category) => {
@@ -160,6 +179,68 @@ export default function ManageCategories() {
     }
   };
 
+  const handleBulkFileChange = async (event) => {
+    const [file] = Array.from(event.target.files || []);
+    if (!file) {
+      return;
+    }
+
+    try {
+      setBulkParsing(true);
+      setBulkResult(null);
+      setBulkErrors([]);
+      const parsedRows = await parseCategoryImportFile(file);
+      const validationErrors = validateCategoryImportRows(parsedRows);
+      setBulkRows(parsedRows);
+      setBulkErrors(validationErrors);
+    } catch (parseError) {
+      setBulkRows([]);
+      setBulkErrors([parseError.message || "Import file could not be read."]);
+    } finally {
+      setBulkParsing(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleBulkImport = async () => {
+    const validationErrors = validateCategoryImportRows(bulkRows);
+    if (validationErrors.length) {
+      setBulkErrors(validationErrors);
+      return;
+    }
+
+    try {
+      setBulkImporting(true);
+      setBulkResult(null);
+      setBulkErrors([]);
+      const result = await bulkImportCategories(bulkRows);
+      setBulkResult(result);
+      setCategories((current) => {
+        const importedMap = new Map((result.categories || []).map((category) => [category.id, category]));
+        const merged = current.map((category) => importedMap.get(category.id) || category);
+        const existingIds = new Set(current.map((category) => category.id));
+        const createdCategories = (result.categories || []).filter((category) => !existingIds.has(category.id));
+        return [...createdCategories, ...merged];
+      });
+      setBulkErrors(result.errors || []);
+    } catch (importError) {
+      setBulkErrors([importError.message || "Bulk category import could not be completed."]);
+    } finally {
+      setBulkImporting(false);
+    }
+  };
+
+  const handleDownloadSampleCsv = () => {
+    const csv = buildSampleCategoryCsv();
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ak-categories-import-sample.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleImageUpload = async (event) => {
     const [file] = Array.from(event.target.files || []);
     if (!file) {
@@ -206,14 +287,24 @@ export default function ManageCategories() {
                   Structure the storefront taxonomy with better visibility into active groups, search surfaces, and image readiness.
                 </p>
               </div>
-              <Button
-                variant="accent"
-                className="w-full gap-2 px-5 py-3 font-black sm:w-auto"
-                onClick={openCreateModal}
-              >
-                <ImagePlus className="h-4 w-4" />
-                Add Category
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  variant="ghost"
+                  className="w-full gap-2 px-5 py-3 font-black sm:w-auto"
+                  onClick={openBulkModal}
+                >
+                  <Upload className="h-4 w-4" />
+                  Bulk Import
+                </Button>
+                <Button
+                  variant="accent"
+                  className="w-full gap-2 px-5 py-3 font-black sm:w-auto"
+                  onClick={openCreateModal}
+                >
+                  <ImagePlus className="h-4 w-4" />
+                  Add Category
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -433,6 +524,112 @@ export default function ManageCategories() {
             {submitting ? "Saving..." : editingCategory ? "Update Category" : "Create Category"}
           </Button>
         </form>
+      </Modal>
+
+      <Modal
+        open={showBulkModal}
+        title="Bulk Import Categories"
+        onClose={() => {
+          if (!bulkImporting) {
+            setShowBulkModal(false);
+          }
+        }}
+      >
+        <div className="grid gap-4">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            Upload CSV or JSON with columns: name, slug, imageUrl, active. Existing slug will be
+            updated, new slug will be created.
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white">
+              <Upload className="h-4 w-4" />
+              {bulkParsing ? "Reading file..." : "Choose CSV / JSON"}
+              <input
+                type="file"
+                accept=".csv,.json,text/csv,application/json"
+                className="hidden"
+                onChange={handleBulkFileChange}
+                disabled={bulkParsing || bulkImporting}
+              />
+            </label>
+            <Button
+              type="button"
+              variant="ghost"
+              className="gap-2"
+              onClick={handleDownloadSampleCsv}
+              disabled={bulkImporting}
+            >
+              <FileDown className="h-4 w-4" />
+              Download Sample CSV
+            </Button>
+          </div>
+
+          {bulkRows.length ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-black text-slate-950">{bulkRows.length} categories ready</p>
+                <Button
+                  type="button"
+                  variant="accent"
+                  className="px-5 py-2 font-black"
+                  onClick={handleBulkImport}
+                  disabled={bulkImporting || bulkErrors.length > 0}
+                >
+                  {bulkImporting ? "Importing..." : "Import Categories"}
+                </Button>
+              </div>
+              <div className="mt-4 max-h-64 overflow-y-auto rounded-xl border border-slate-100">
+                <table className="w-full min-w-[620px] text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2">Name</th>
+                      <th className="px-3 py-2">Slug</th>
+                      <th className="px-3 py-2">Image URL</th>
+                      <th className="px-3 py-2">Active</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkRows.slice(0, 25).map((row, index) => (
+                      <tr key={`${row.slug}-${index}`} className="border-t border-slate-100">
+                        <td className="px-3 py-2 font-semibold text-slate-900">{row.name || "-"}</td>
+                        <td className="px-3 py-2 text-slate-600">{row.slug || "-"}</td>
+                        <td className="max-w-[220px] truncate px-3 py-2 text-slate-600">
+                          {row.imageUrl || "-"}
+                        </td>
+                        <td className="px-3 py-2 text-slate-600">{row.active ? "Yes" : "No"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {bulkRows.length > 25 ? (
+                <p className="mt-2 text-xs text-slate-500">Showing first 25 rows only.</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {bulkResult ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              Imported {bulkResult.totalRows} rows. Created {bulkResult.createdCount}, updated{" "}
+              {bulkResult.updatedCount}, failed {bulkResult.failedCount}.
+            </div>
+          ) : null}
+
+          {bulkErrors.length ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <p className="font-black">Please fix these rows before importing:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {bulkErrors.slice(0, 8).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              {bulkErrors.length > 8 ? (
+                <p className="mt-2 text-xs">Showing first 8 errors.</p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </Modal>
     </div>
   );
