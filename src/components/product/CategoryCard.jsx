@@ -11,7 +11,7 @@ export default function CategoryCard({ category }) {
   return (
     <Link
       to={`/category/${category.slug}`}
-      className="flex w-full min-w-0 flex-col items-center rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
+      className="flex h-full min-h-[162px] w-full min-w-0 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center shadow-sm transition hover:-translate-y-1 hover:border-yellow-300 hover:shadow-soft focus:outline-none focus:ring-2 focus:ring-yellow-300"
     >
       <div className={`h-14 w-14 overflow-hidden rounded-2xl bg-gradient-to-br ${category.color}`}>
         {category.imageUrl && !imageFailed ? (
@@ -28,7 +28,7 @@ export default function CategoryCard({ category }) {
           </div>
         )}
       </div>
-      <h3 className="mt-3 text-sm font-bold text-slate-900">{category.name}</h3>
+      <h3 className="mt-3 line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5 text-slate-900">{category.name}</h3>
       <p className="mt-1 text-[11px] text-slate-500">Explore</p>
     </Link>
   );

@@ -82,6 +82,15 @@ textarea {
   @apply rounded-[2rem] border border-slate-200 bg-white p-3 shadow-soft;
 }
 
+.category-carousel {
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+
+.category-carousel::-webkit-scrollbar {
+  display: none;
+}
+
 .admin-shell {
   background:
     linear-gradient(180deg, #0f1720 0, #0f1720 100%) left/280px 100% no-repeat,

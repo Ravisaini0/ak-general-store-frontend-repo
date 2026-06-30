@@ -8,6 +8,7 @@ import {
   Truck,
   Wheat,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
@@ -21,9 +22,33 @@ import { useStoreData } from "../hooks/useStoreData";
 export default function Home() {
   const { categories, products, loading, error, backendReady } = useStoreData();
   const { freeDeliveryThreshold } = usePublicStoreSettings();
+  const categoryRailRef = useRef(null);
+  const [categoryRailPaused, setCategoryRailPaused] = useState(false);
   const bestSelling = products.slice(0, 6);
   const heroImage =
     "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80";
+
+  useEffect(() => {
+    const rail = categoryRailRef.current;
+    if (!rail || categoryRailPaused || categories.length <= 3) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
+      if (maxScrollLeft <= 0) {
+        return;
+      }
+
+      const nextLeft = rail.scrollLeft + Math.min(220, rail.clientWidth * 0.65);
+      rail.scrollTo({
+        left: nextLeft >= maxScrollLeft - 8 ? 0 : nextLeft,
+        behavior: "smooth",
+      });
+    }, 2800);
+
+    return () => window.clearInterval(intervalId);
+  }, [categories.length, categoryRailPaused]);
 
   return (
     <div className="page-shell">
@@ -123,9 +148,20 @@ export default function Home() {
               {error}
             </div>
           ) : null}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+          <div
+            ref={categoryRailRef}
+            className="category-carousel flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2"
+            onFocus={() => setCategoryRailPaused(true)}
+            onBlur={() => setCategoryRailPaused(false)}
+            onMouseEnter={() => setCategoryRailPaused(true)}
+            onMouseLeave={() => setCategoryRailPaused(false)}
+            onTouchStart={() => setCategoryRailPaused(true)}
+            onTouchEnd={() => setCategoryRailPaused(false)}
+          >
             {categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
+              <div key={category.id} className="min-w-[148px] snap-start sm:min-w-[160px] lg:min-w-[174px]">
+                <CategoryCard category={category} />
+              </div>
             ))}
           </div>
         </section>
