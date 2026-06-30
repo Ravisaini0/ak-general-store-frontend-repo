@@ -33,6 +33,7 @@ const emptyForm = {
   originalPrice: "",
   unit: "",
   categoryId: "",
+  categoryIds: [],
   imageUrl: "",
   imageUrls: [""],
   featured: false,
@@ -57,6 +58,18 @@ function getProductSearchText(product, categoryName) {
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
+}
+
+function getProductCategoryIds(product) {
+  if (product.categoryIds?.length) {
+    return product.categoryIds.map(Number).filter(Boolean);
+  }
+
+  return product.categoryId ? [Number(product.categoryId)] : [];
+}
+
+function getCategoryNames(categoryIds, categoryMap) {
+  return categoryIds.map((categoryId) => categoryMap[categoryId]).filter(Boolean).join(", ");
 }
 
 export default function ManageProducts() {
@@ -107,11 +120,13 @@ export default function ManageProducts() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const categoryName = categoryMap[product.categoryId] || "Uncategorized";
+      const productCategoryIds = getProductCategoryIds(product);
+      const categoryName = getCategoryNames(productCategoryIds, categoryMap) || "Uncategorized";
       const queryMatch =
         !search.trim() || getProductSearchText(product, categoryName).includes(search.trim().toLowerCase());
       const categoryMatch =
-        categoryFilter === "ALL" || String(product.categoryId) === String(categoryFilter);
+        categoryFilter === "ALL" ||
+        productCategoryIds.some((categoryId) => String(categoryId) === String(categoryFilter));
       const featuredMatch =
         featuredFilter === "ALL" ||
         (featuredFilter === "FEATURED" && product.featured) ||
@@ -163,6 +178,7 @@ export default function ManageProducts() {
       originalPrice: String(product.originalPrice || ""),
       unit: product.unit || "",
       categoryId: String(product.categoryId || ""),
+      categoryIds: getProductCategoryIds(product).map(String),
       imageUrl: product.imageUrl || "",
       imageUrls: normalizedImageUrls.length ? normalizedImageUrls : [""],
       featured: Boolean(product.featured),
@@ -224,6 +240,7 @@ export default function ManageProducts() {
     try {
       setSubmitting(true);
       setError("");
+      const categoryIds = form.categoryIds.map(Number).filter(Boolean);
 
       const payload = {
         name: form.name,
@@ -231,13 +248,14 @@ export default function ManageProducts() {
         price: Number(form.price),
         originalPrice: Number(form.originalPrice || form.price),
         unit: form.unit,
-        categoryId: Number(form.categoryId),
+        categoryId: categoryIds[0],
+        categoryIds,
         imageUrl:
           sanitizeGalleryUrls(form.imageUrls)[0] ||
           form.imageUrl ||
           getFallbackProductImage({
             name: form.name,
-            categoryId: Number(form.categoryId),
+            categoryId: categoryIds[0],
           }),
         imageUrls: sanitizeGalleryUrls(form.imageUrls),
         featured: Boolean(form.featured),
@@ -324,6 +342,21 @@ export default function ManageProducts() {
     link.download = "ak-products-import-sample.csv";
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const toggleFormCategory = (categoryId) => {
+    setForm((current) => {
+      const id = String(categoryId);
+      const categoryIds = current.categoryIds.includes(id)
+        ? current.categoryIds.filter((item) => item !== id)
+        : [...current.categoryIds, id];
+
+      return {
+        ...current,
+        categoryIds,
+        categoryId: categoryIds[0] || "",
+      };
+    });
   };
 
   const updateImageUrl = (index, value) => {
@@ -476,7 +509,8 @@ export default function ManageProducts() {
                   (product.imageUrls && product.imageUrls[0]) ||
                   product.imageUrl ||
                   getFallbackProductImage(product);
-                const categoryName = categoryMap[product.categoryId] || "Uncategorized";
+                const productCategoryIds = getProductCategoryIds(product);
+                const categoryName = getCategoryNames(productCategoryIds, categoryMap) || "Uncategorized";
                 const imageCount = product.imageUrls?.length || 1;
 
                 return (
@@ -629,20 +663,31 @@ export default function ManageProducts() {
             value={form.unit}
             onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))}
           />
-          <select
-            className="store-input"
-            value={form.categoryId}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, categoryId: event.target.value }))
-            }
-          >
-            <option value="">Select category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-black text-slate-950">Product Categories</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Select one or more categories. The product will appear in every selected category page.
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {categories.map((category) => (
+                <label
+                  key={category.id}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 text-sm font-semibold ${
+                    form.categoryIds.includes(String(category.id))
+                      ? "border-yellow-300 bg-yellow-50 text-slate-950"
+                      : "border-slate-200 bg-white text-slate-600"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.categoryIds.includes(String(category.id))}
+                    onChange={() => toggleFormCategory(category.id)}
+                  />
+                  {category.name}
+                </label>
+              ))}
+            </div>
+          </div>
 
           <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -749,12 +794,12 @@ export default function ManageProducts() {
                   </div>
                 ))}
               </div>
-            ) : form.name || form.categoryId ? (
+            ) : form.name || form.categoryIds.length ? (
               <div className="mt-4">
                 <img
                   src={getFallbackProductImage({
                     name: form.name,
-                    categoryId: Number(form.categoryId),
+                    categoryId: Number(form.categoryIds[0]),
                   })}
                   alt="Product preview"
                   className="h-40 w-full rounded-2xl object-cover"
@@ -792,8 +837,8 @@ export default function ManageProducts() {
         <div className="grid gap-4">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
             Upload CSV or JSON with columns: name, description, price, originalPrice, unit,
-            categoryId or categoryName, imageUrl, imageUrls, featured. Use imageUrls separated by
-            | for multiple images.
+            categoryIds or categoryNames, imageUrl, imageUrls, featured. Use | between multiple
+            category names/ids and image URLs.
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -850,7 +895,10 @@ export default function ManageProducts() {
                       <tr key={`${row.name}-${index}`} className="border-t border-slate-100">
                         <td className="px-3 py-2 font-semibold text-slate-900">{row.name || "-"}</td>
                         <td className="px-3 py-2 text-slate-600">
-                          {categoryMap[row.categoryId] || row.categoryId || "-"}
+                          {getCategoryNames(row.categoryIds || [row.categoryId], categoryMap) ||
+                            row.categoryIds?.join(", ") ||
+                            row.categoryId ||
+                            "-"}
                         </td>
                         <td className="px-3 py-2 text-slate-600">{row.unit || "-"}</td>
                         <td className="px-3 py-2 text-slate-600">{formatPrice(row.price)}</td>

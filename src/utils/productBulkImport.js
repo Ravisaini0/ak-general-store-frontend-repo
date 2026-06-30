@@ -65,24 +65,42 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function resolveCategoryId(row, categories) {
-  const categoryId = toNumber(row.categoryId || row.categoryid);
-  if (categoryId) {
-    return categoryId;
+function splitCategoryValues(value) {
+  return String(value || "")
+    .split(/[|;/]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function resolveCategoryIds(row, categories) {
+  const ids = [];
+  const addId = (id) => {
+    if (id && !ids.includes(id)) {
+      ids.push(id);
+    }
+  };
+
+  splitCategoryValues(row.categoryIds || row.categoryids || row.categoryId || row.categoryid).forEach((value) => {
+    addId(toNumber(value));
+  });
+
+  if (ids.length) {
+    return ids;
   }
 
-  const categoryName = String(row.categoryName || row.categoryname || "").trim().toLowerCase();
-  if (!categoryName) {
-    return 0;
-  }
+  splitCategoryValues(row.categoryNames || row.categorynames || row.categoryName || row.categoryname).forEach((categoryName) => {
+    const normalizedCategoryName = categoryName.toLowerCase();
+    const categoryId = Number(
+      categories.find(
+        (category) =>
+          String(category.name || "").trim().toLowerCase() === normalizedCategoryName ||
+          String(category.slug || "").trim().toLowerCase() === normalizedCategoryName
+      )?.id || 0
+    );
+    addId(categoryId);
+  });
 
-  return Number(
-    categories.find(
-      (category) =>
-        String(category.name || "").trim().toLowerCase() === categoryName ||
-        String(category.slug || "").trim().toLowerCase() === categoryName
-    )?.id || 0
-  );
+  return ids;
 }
 
 function normalizeProductRow(row, categories) {
@@ -91,6 +109,7 @@ function normalizeProductRow(row, categories) {
     .map((value) => value.trim())
     .filter(Boolean);
   const imageUrl = String(row.imageUrl || row.imageurl || "").trim();
+  const categoryIds = resolveCategoryIds(row, categories);
 
   return {
     name: String(row.name || "").trim(),
@@ -98,7 +117,8 @@ function normalizeProductRow(row, categories) {
     price: toNumber(row.price),
     originalPrice: toNumber(row.originalPrice || row.originalprice || row.price),
     unit: String(row.unit || "").trim(),
-    categoryId: resolveCategoryId(row, categories),
+    categoryId: categoryIds[0] || 0,
+    categoryIds,
     imageUrl: imageUrl || imageUrls[0] || "",
     imageUrls: imageUrls.length ? imageUrls : imageUrl ? [imageUrl] : [],
     featured: toBoolean(row.featured),
@@ -144,8 +164,8 @@ export function validateProductImportRows(products) {
     if (!product.price || product.price <= 0) {
       errors.push(`Row ${rowNumber}: valid price is required.`);
     }
-    if (!product.categoryId) {
-      errors.push(`Row ${rowNumber}: categoryId or categoryName is required.`);
+    if (!product.categoryIds?.length) {
+      errors.push(`Row ${rowNumber}: categoryIds or categoryNames is required.`);
     }
   });
 
@@ -154,10 +174,11 @@ export function validateProductImportRows(products) {
 
 export function buildSampleProductCsv(categories = []) {
   const fallbackCategory = categories[0] || { id: 1, name: "Biscuits & Snacks" };
+  const secondCategory = categories[1] || fallbackCategory;
   return [
-    "name,description,price,originalPrice,unit,categoryId,categoryName,imageUrl,imageUrls,featured",
-    `"Parle-G - Mini Pack","Small biscuit pack",5,5,"1 pack",${fallbackCategory.id},"${fallbackCategory.name}","","",true`,
-    `"Parle-G - Family Pack","Family biscuit pack",50,55,"1 pack",${fallbackCategory.id},"${fallbackCategory.name}","","",false`,
-    `"Kurkure - Masala Munch","Crunchy snack pack",20,20,"1 pack",${fallbackCategory.id},"${fallbackCategory.name}","","",false`,
+    "name,description,price,originalPrice,unit,categoryIds,categoryNames,imageUrl,imageUrls,featured",
+    `"Parle-G - Mini Pack","Small biscuit pack",5,5,"1 pack","${fallbackCategory.id}","${fallbackCategory.name}","","",true`,
+    `"Parle-G - Family Pack","Family biscuit pack",50,55,"1 pack","${fallbackCategory.id}|${secondCategory.id}","${fallbackCategory.name}|${secondCategory.name}","","",false`,
+    `"Kurkure - Masala Munch","Crunchy snack pack",20,20,"1 pack","${fallbackCategory.id}","${fallbackCategory.name}","","",false`,
   ].join("\n");
 }

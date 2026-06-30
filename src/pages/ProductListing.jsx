@@ -25,7 +25,14 @@ export default function ProductListing() {
 
   const filteredProducts = useMemo(() => {
     const categoryFiltered = category
-      ? products.filter((product) => product.categoryId === category.id)
+      ? products.filter((product) => {
+          const productCategoryIds = product.categoryIds?.length
+            ? product.categoryIds
+            : product.categoryId
+              ? [product.categoryId]
+              : [];
+          return productCategoryIds.some((categoryId) => Number(categoryId) === Number(category.id));
+        })
       : products;
 
     const searchFiltered = search

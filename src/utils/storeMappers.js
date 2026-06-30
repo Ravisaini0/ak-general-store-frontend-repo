@@ -57,7 +57,7 @@ function slugify(value = "") {
 }
 
 function inferVisual(product) {
-  const seed = `${product.name} ${product.slug} ${product.categoryId}`.toLowerCase();
+  const seed = `${product.name} ${product.slug} ${product.categoryId} ${(product.categoryIds || []).join(" ")}`.toLowerCase();
 
   if (seed.includes("dal")) return "dal";
   if (seed.includes("rice")) return "rice";
@@ -109,6 +109,9 @@ export function mapCategory(category) {
 export function mapProduct(product) {
   const visual = inferVisual(product);
   const normalizedImageUrls = normalizeAssetUrls(product.imageUrls || []);
+  const categoryIds = (product.categoryIds?.length ? product.categoryIds : [product.categoryId])
+    .map(Number)
+    .filter(Boolean);
   const primaryImage =
     normalizeAssetUrl(product.imageUrl) ||
     normalizedImageUrls[0] ||
@@ -122,7 +125,8 @@ export function mapProduct(product) {
 
   return {
     id: Number(product.id),
-    categoryId: Number(product.categoryId),
+    categoryId: Number(product.categoryId || categoryIds[0] || 0),
+    categoryIds,
     name: product.name,
     slug: product.slug || slugify(product.name),
     description: product.description || "Fresh grocery item from AK General Store.",

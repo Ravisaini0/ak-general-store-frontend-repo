@@ -39,8 +39,15 @@ export function scoreProductMatch(product, categories = [], rawSearch = "") {
   }
 
   const tokens = normalizeSearchTokens(rawSearch);
-  const categoryName =
-    categories.find((item) => Number(item.id) === Number(product.categoryId))?.name || "";
+  const productCategoryIds = product.categoryIds?.length
+    ? product.categoryIds
+    : product.categoryId
+      ? [product.categoryId]
+      : [];
+  const categoryName = productCategoryIds
+    .map((categoryId) => categories.find((item) => Number(item.id) === Number(categoryId))?.name || "")
+    .filter(Boolean)
+    .join(" ");
   const productName = (product.name || "").toLowerCase();
   const productSlug = (product.slug || "").toLowerCase();
   const description = (product.description || "").toLowerCase();
