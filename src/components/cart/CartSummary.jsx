@@ -10,7 +10,7 @@ export default function CartSummary() {
   const navigate = useNavigate();
   const { freeDeliveryThreshold: freeDeliveryThresholdValue, deliveryCharge: deliveryChargeValue } =
     usePublicStoreSettings();
-  const freeDeliveryThreshold = Number(freeDeliveryThresholdValue || 299);
+  const freeDeliveryThreshold = Number(freeDeliveryThresholdValue || 499);
   const standardDeliveryCharge = Number(deliveryChargeValue || 40);
   const deliveryFee =
     totalAmount === 0 || totalAmount >= freeDeliveryThreshold ? 0 : standardDeliveryCharge;

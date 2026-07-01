@@ -1,9 +1,9 @@
-import { Award, Leaf, ShoppingCart, Timer, Truck } from "lucide-react";
+import { Award, Leaf, Timer, Truck } from "lucide-react";
 
 const highlights = [
   { label: "10-30 min\nDelivery", icon: Timer },
   { label: "Best Quality\nProducts", icon: Award },
-  { label: "Free Delivery\nabove Rs299", icon: Truck },
+  { label: "Free Delivery\nabove Rs499", icon: Truck },
   { label: "Fresh & Pure\nEverytime", icon: Leaf },
 ];
 
@@ -19,18 +19,18 @@ export default function Loader({ progress = {} }) {
       : "Preparing live catalog";
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#030303] px-4 py-8 text-white">
+    <div className="relative flex h-[100svh] items-center justify-center overflow-hidden bg-[#030303] px-3 py-2 text-white sm:px-4 sm:py-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,196,0,0.1),transparent_34%),radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.06),transparent_24%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.76))]" />
 
-      <div className="relative flex w-full max-w-4xl flex-col items-center text-center">
-        <div className="relative flex h-64 w-64 items-center justify-center sm:h-80 sm:w-80">
-          <div className="absolute inset-8 rounded-full border border-yellow-400/80 shadow-[0_0_50px_rgba(250,204,21,0.24)]" />
-          <div className="absolute right-10 top-16 h-5 w-5 rounded-full bg-yellow-300 shadow-[0_0_34px_14px_rgba(250,204,21,0.8)]" />
-          <div className="absolute bottom-16 left-10 h-4 w-4 rounded-full bg-yellow-300 shadow-[0_0_30px_12px_rgba(250,204,21,0.75)]" />
-          <div className="absolute left-10 top-12 h-32 w-32 rounded-full border-l border-yellow-400/40" />
+      <div className="relative flex h-full max-h-[920px] w-full max-w-4xl flex-col items-center justify-between text-center">
+        <div className="relative flex h-[clamp(8.5rem,27svh,19rem)] w-[clamp(8.5rem,27svh,19rem)] shrink-0 items-center justify-center">
+          <div className="absolute inset-[10%] rounded-full border border-yellow-400/80 shadow-[0_0_50px_rgba(250,204,21,0.24)]" />
+          <div className="absolute right-[15%] top-[22%] h-3 w-3 rounded-full bg-yellow-300 shadow-[0_0_28px_10px_rgba(250,204,21,0.8)] sm:h-5 sm:w-5" />
+          <div className="absolute bottom-[22%] left-[15%] h-3 w-3 rounded-full bg-yellow-300 shadow-[0_0_24px_9px_rgba(250,204,21,0.75)] sm:h-4 sm:w-4" />
+          <div className="absolute left-[15%] top-[18%] h-[42%] w-[42%] rounded-full border-l border-yellow-400/40" />
 
-          <div className="relative -mt-2 flex items-end justify-center text-[7.5rem] font-black leading-none tracking-[-0.14em] sm:text-[10rem]">
+          <div className="relative -mt-2 flex items-end justify-center text-[clamp(4.8rem,16svh,9.5rem)] font-black leading-none tracking-[-0.14em]">
             <span className="bg-gradient-to-b from-white via-slate-200 to-slate-500 bg-clip-text pr-1 text-transparent">
               a
             </span>
@@ -40,29 +40,29 @@ export default function Loader({ progress = {} }) {
           </div>
         </div>
 
-        <div className="-mt-5">
-          <h1 className="text-3xl font-black tracking-[0.22em] text-white sm:text-4xl">
+        <div className="-mt-2 shrink-0 sm:-mt-4">
+          <h1 className="text-[clamp(1.25rem,4.4vw,2.35rem)] font-black tracking-[0.16em] text-white sm:tracking-[0.22em]">
             A K <span className="text-yellow-400">GENERAL STORE</span>
           </h1>
-          <div className="mt-4 flex items-center justify-center gap-4 text-lg font-semibold text-white/90 sm:text-2xl">
-            <span className="h-px w-12 bg-yellow-400" />
+          <div className="mt-2 flex items-center justify-center gap-3 text-[clamp(0.9rem,2.8vw,1.5rem)] font-semibold text-white/90 sm:mt-3 sm:gap-4">
+            <span className="h-px w-8 bg-yellow-400 sm:w-12" />
             <span>Your Daily Needs Partner</span>
-            <span className="h-px w-12 bg-yellow-400" />
+            <span className="h-px w-8 bg-yellow-400 sm:w-12" />
           </div>
         </div>
 
-        <div className="mt-12 grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid w-full max-w-3xl shrink-0 grid-cols-4 gap-1.5 sm:gap-4">
           {highlights.map((item, index) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.label}
-                className={`flex items-center justify-center gap-3 sm:border-r sm:border-yellow-400/35 ${
+                className={`flex min-w-0 flex-col items-center justify-center gap-1 px-1 sm:flex-row sm:gap-3 sm:border-r sm:border-yellow-400/35 ${
                   index === highlights.length - 1 ? "sm:border-r-0" : ""
                 }`}
               >
-                <Icon className="h-8 w-8 shrink-0 text-yellow-400 sm:h-10 sm:w-10" />
-                <p className="whitespace-pre-line text-left text-sm font-semibold leading-6 text-white sm:text-base">
+                <Icon className="h-5 w-5 shrink-0 text-yellow-400 sm:h-10 sm:w-10" />
+                <p className="whitespace-pre-line text-center text-[10px] font-semibold leading-4 text-white sm:text-left sm:text-base sm:leading-6">
                   {item.label}
                 </p>
               </div>
@@ -70,8 +70,8 @@ export default function Loader({ progress = {} }) {
           })}
         </div>
 
-        <div className="relative mt-14 w-full max-w-3xl text-yellow-500/70">
-          <div className="mx-auto hidden h-56 max-w-xl sm:block">
+        <div className="relative w-full max-w-3xl shrink-0 text-yellow-500/70">
+          <div className="mx-auto h-[clamp(5.3rem,17svh,13rem)] max-w-xl">
             <svg viewBox="0 0 720 260" className="h-full w-full overflow-visible">
               <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
                 <path d="M92 238h536" />
@@ -93,22 +93,19 @@ export default function Loader({ progress = {} }) {
               </g>
             </svg>
           </div>
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-yellow-400/30 bg-black/40 sm:hidden">
-            <ShoppingCart className="h-8 w-8 text-yellow-400" />
-          </div>
           <div className="mx-auto h-px w-full bg-yellow-500/30" />
         </div>
 
-        <div className="mt-10 w-full max-w-xl">
-          <p className="text-2xl font-semibold text-white">{loadingText}</p>
-          <div className="mt-6 h-4 overflow-hidden rounded-full bg-white/15 shadow-inner">
+        <div className="w-full max-w-xl shrink-0 pb-1">
+          <p className="text-[clamp(1rem,3.2vw,1.5rem)] font-semibold text-white">{loadingText}</p>
+          <div className="mt-3 h-3 overflow-hidden rounded-full bg-white/15 shadow-inner sm:mt-5 sm:h-4">
             <div
               className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 shadow-[0_0_22px_rgba(250,204,21,0.45)] transition-all duration-700"
               style={{ width: `${percent}%` }}
             />
           </div>
-          <p className="mt-6 text-3xl font-semibold text-yellow-400">{percent}%</p>
-          <p className="mt-3 text-xs font-medium uppercase tracking-[0.28em] text-white/45">{statusText}</p>
+          <p className="mt-3 text-[clamp(1.3rem,4vw,1.9rem)] font-semibold text-yellow-400 sm:mt-5">{percent}%</p>
+          <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em] text-white/45 sm:mt-2 sm:text-xs sm:tracking-[0.28em]">{statusText}</p>
         </div>
       </div>
     </div>

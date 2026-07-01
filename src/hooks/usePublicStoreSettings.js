@@ -3,7 +3,7 @@ import { fetchPublicStoreSettings } from "../services/storeService";
 
 const DEFAULT_SETTINGS = {
   storeName: "AK General Store",
-  freeDeliveryThreshold: "299",
+  freeDeliveryThreshold: "499",
   deliveryCharge: "40",
   supportPhone: "9483989109",
   supportEmail: "support@akgeneralstore.com",

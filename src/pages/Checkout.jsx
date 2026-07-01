@@ -74,7 +74,7 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [serviceSettings, setServiceSettings] = useState({
-    freeDeliveryThreshold: "299",
+    freeDeliveryThreshold: "499",
     deliveryCharge: "40",
     serviceRadiusKm: "25",
     storeLocations: "",
@@ -104,7 +104,7 @@ export default function Checkout() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   const discountAmount = Number(appliedCoupon?.discountAmount || 0);
-  const freeDeliveryThreshold = Number(serviceSettings.freeDeliveryThreshold || 299);
+  const freeDeliveryThreshold = Number(serviceSettings.freeDeliveryThreshold || 499);
   const standardDeliveryCharge = Number(serviceSettings.deliveryCharge || 40);
   const deliveryFee =
     subtotalAmount === 0 || subtotalAmount >= freeDeliveryThreshold ? 0 : standardDeliveryCharge;
@@ -142,7 +142,7 @@ export default function Checkout() {
             deliveryAdditionalPayoutAmount: "10",
           })),
           fetchPublicStoreSettings().catch(() => ({
-            freeDeliveryThreshold: "299",
+            freeDeliveryThreshold: "499",
             deliveryCharge: "40",
             serviceRadiusKm: "25",
             storeLocations: "",
@@ -153,7 +153,7 @@ export default function Checkout() {
 
         setPaymentConfig(config);
         setServiceSettings({
-          freeDeliveryThreshold: settings.freeDeliveryThreshold || "299",
+          freeDeliveryThreshold: settings.freeDeliveryThreshold || "499",
           deliveryCharge: settings.deliveryCharge || "40",
           serviceRadiusKm: settings.serviceRadiusKm || "25",
           storeLocations: settings.storeLocations || "",
@@ -172,7 +172,7 @@ export default function Checkout() {
           deliveryAdditionalPayoutAmount: "10",
         });
         setServiceSettings({
-          freeDeliveryThreshold: "299",
+          freeDeliveryThreshold: "499",
           deliveryCharge: "40",
           serviceRadiusKm: "25",
           storeLocations: "",

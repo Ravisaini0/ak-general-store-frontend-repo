@@ -125,7 +125,7 @@ export default function Header() {
         </div>
 
         <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
-          <Link to="/products" onClick={scrollToTop} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 text-sm font-bold text-slate-950">
+          <Link to="/#all-categories" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 text-sm font-bold text-slate-950">
             <Menu className="h-4 w-4" />
             All Categories
           </Link>
