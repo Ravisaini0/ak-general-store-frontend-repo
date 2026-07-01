@@ -1,164 +1,114 @@
-import { CheckCircle2, Clock3, PackageCheck, Server, ShieldCheck, Truck } from "lucide-react";
+import { Award, Leaf, ShoppingCart, Timer, Truck } from "lucide-react";
 
-const readinessChecks = [
-  { key: "health", label: "Backend API", description: "Connecting to live server" },
-  { key: "settings", label: "Store settings", description: "Loading delivery, payment, and support config" },
-  { key: "categories", label: "Categories", description: "Preparing storefront navigation" },
-  { key: "products", label: "Products", description: "Syncing latest catalog and prices" },
-];
-
-const serviceHighlights = [
-  { label: "Fast delivery", icon: Truck },
-  { label: "Fresh catalog", icon: PackageCheck },
-  { label: "Secure checkout", icon: ShieldCheck },
+const highlights = [
+  { label: "10-30 min\nDelivery", icon: Timer },
+  { label: "Best Quality\nProducts", icon: Award },
+  { label: "Free Delivery\nabove Rs299", icon: Truck },
+  { label: "Fresh & Pure\nEverytime", icon: Leaf },
 ];
 
 export default function Loader({ progress = {} }) {
-  const total = Number(progress.total || readinessChecks.length);
+  const total = Number(progress.total || 4);
   const completed = Number(progress.completed || 0);
   const percent = Math.max(8, Math.min(100, Math.round((completed / total) * 100)));
+  const loadingText = progress.retrying ? "Waking live server..." : "Loading...";
   const statusText = progress.retrying
-    ? progress.message || "Live server is waking up. Retrying..."
-    : `Preparing ${progress.currentLabel || "live catalog"}...`;
+    ? `Attempt ${progress.attempt || 1} - reconnecting`
+    : progress.currentLabel
+      ? `Preparing ${progress.currentLabel}`
+      : "Preparing live catalog";
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#070806] px-4 py-8 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_12%,rgba(250,204,21,0.24),transparent_30%),radial-gradient(circle_at_85%_18%,rgba(34,197,94,0.12),transparent_24%),radial-gradient(circle_at_70%_92%,rgba(249,115,22,0.2),transparent_30%)]" />
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-300/70 to-transparent" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#030303] px-4 py-8 text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,196,0,0.1),transparent_34%),radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.06),transparent_24%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.76))]" />
 
-      <div className="relative w-full max-w-5xl overflow-hidden rounded-[2.25rem] border border-yellow-400/20 bg-[linear-gradient(135deg,_rgba(15,15,15,0.98),_rgba(8,8,8,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.55)]">
-        <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="relative overflow-hidden border-b border-white/10 p-6 sm:p-8 lg:border-b-0 lg:border-r">
-            <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-yellow-400/10 blur-3xl" />
-            <div className="relative">
-              <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-yellow-400 text-2xl font-black text-slate-950 shadow-[0_18px_60px_rgba(250,204,21,0.28)]">
-                  AK
-                </div>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.36em] text-yellow-200">AK General Store</p>
-                  <h1 className="mt-1 text-2xl font-black leading-tight text-white sm:text-4xl">
-                    Getting fresh groceries ready
-                  </h1>
-                </div>
+      <div className="relative flex w-full max-w-4xl flex-col items-center text-center">
+        <div className="relative flex h-64 w-64 items-center justify-center sm:h-80 sm:w-80">
+          <div className="absolute inset-8 rounded-full border border-yellow-400/80 shadow-[0_0_50px_rgba(250,204,21,0.24)]" />
+          <div className="absolute right-10 top-16 h-5 w-5 rounded-full bg-yellow-300 shadow-[0_0_34px_14px_rgba(250,204,21,0.8)]" />
+          <div className="absolute bottom-16 left-10 h-4 w-4 rounded-full bg-yellow-300 shadow-[0_0_30px_12px_rgba(250,204,21,0.75)]" />
+          <div className="absolute left-10 top-12 h-32 w-32 rounded-full border-l border-yellow-400/40" />
+
+          <div className="relative -mt-2 flex items-end justify-center text-[7.5rem] font-black leading-none tracking-[-0.14em] sm:text-[10rem]">
+            <span className="bg-gradient-to-b from-white via-slate-200 to-slate-500 bg-clip-text pr-1 text-transparent">
+              a
+            </span>
+            <span className="bg-gradient-to-b from-yellow-100 via-yellow-400 to-yellow-700 bg-clip-text text-transparent drop-shadow-[0_12px_34px_rgba(250,204,21,0.22)]">
+              k
+            </span>
+          </div>
+        </div>
+
+        <div className="-mt-5">
+          <h1 className="text-3xl font-black tracking-[0.22em] text-white sm:text-4xl">
+            A K <span className="text-yellow-400">GENERAL STORE</span>
+          </h1>
+          <div className="mt-4 flex items-center justify-center gap-4 text-lg font-semibold text-white/90 sm:text-2xl">
+            <span className="h-px w-12 bg-yellow-400" />
+            <span>Your Daily Needs Partner</span>
+            <span className="h-px w-12 bg-yellow-400" />
+          </div>
+        </div>
+
+        <div className="mt-12 grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
+          {highlights.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.label}
+                className={`flex items-center justify-center gap-3 sm:border-r sm:border-yellow-400/35 ${
+                  index === highlights.length - 1 ? "sm:border-r-0" : ""
+                }`}
+              >
+                <Icon className="h-8 w-8 shrink-0 text-yellow-400 sm:h-10 sm:w-10" />
+                <p className="whitespace-pre-line text-left text-sm font-semibold leading-6 text-white sm:text-base">
+                  {item.label}
+                </p>
               </div>
+            );
+          })}
+        </div>
 
-              <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
-                We are checking the live backend, store settings, categories, and product catalog before opening the shop.
-              </p>
+        <div className="relative mt-14 w-full max-w-3xl text-yellow-500/70">
+          <div className="mx-auto hidden h-56 max-w-xl sm:block">
+            <svg viewBox="0 0 720 260" className="h-full w-full overflow-visible">
+              <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                <path d="M92 238h536" />
+                <path d="M190 82h340v156H190z" />
+                <path d="M172 112h376l-34 48H206z" />
+                <path d="M206 160c12 18 32 18 44 0c12 18 32 18 44 0c12 18 32 18 44 0c12 18 32 18 44 0c12 18 32 18 44 0c12 18 32 18 44 0c12 18 32 18 44 0" />
+                <path d="M230 196h70v42h-70zM420 196h70v42h-70z" />
+                <path d="M324 184h72v54h-72zM344 184v54" />
+                <path d="M230 98h260v26H230z" />
+                <path d="M286 116h148" />
+                <path d="M124 236l-22-76h70l-18 76" />
+                <path d="M108 176h58m-48 18h42m-36 18h30" />
+                <circle cx="116" cy="244" r="8" />
+                <circle cx="154" cy="244" r="8" />
+                <path d="M600 198h54v34h-54zM654 232h20m-66 8a10 10 0 1 0 20 0m30 0a10 10 0 1 0 20 0" />
+                <path d="M588 232h-18m34-34c10-18 28-20 44-8" />
+                <path d="M252 226c18-20 54-20 72 0m86 0c18-20 54-20 72 0" />
+                <path d="M252 212h70m88 0h70" />
+              </g>
+            </svg>
+          </div>
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-yellow-400/30 bg-black/40 sm:hidden">
+            <ShoppingCart className="h-8 w-8 text-yellow-400" />
+          </div>
+          <div className="mx-auto h-px w-full bg-yellow-500/30" />
+        </div>
 
-              <div className="mt-7 grid gap-3 sm:grid-cols-3">
-                {serviceHighlights.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                      <Icon className="h-5 w-5 text-yellow-300" />
-                      <p className="mt-3 text-sm font-black text-white">{item.label}</p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-black/30 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-yellow-400/15 text-yellow-200">
-                    <Clock3 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-white">Opening automatically</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Please wait. No refresh needed while the live API becomes ready.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="p-6 sm:p-8">
-            <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.28em] text-slate-400">Startup Status</p>
-                  <h2 className="mt-2 text-xl font-black text-white">{statusText}</h2>
-                </div>
-                <div className="rounded-2xl bg-yellow-400 px-3 py-2 text-sm font-black text-slate-950">
-                  {percent}%
-                </div>
-              </div>
-
-              <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400 transition-all duration-700"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-
-              <div className="mt-5 space-y-3">
-                {readinessChecks.map((check, index) => {
-                  const isDone = completed > index;
-                  const isCurrent = completed === index && !progress.retrying;
-                  const isRetrying = progress.retrying && index === 0;
-
-                  return (
-                    <div
-                      key={check.key}
-                      className={`rounded-2xl border px-4 py-3 transition ${
-                        isDone
-                          ? "border-emerald-400/25 bg-emerald-400/10"
-                          : isCurrent || isRetrying
-                            ? "border-yellow-400/30 bg-yellow-400/10"
-                            : "border-white/10 bg-black/20"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`flex h-9 w-9 items-center justify-center rounded-2xl ${
-                              isDone
-                                ? "bg-emerald-400/15 text-emerald-200"
-                                : isCurrent || isRetrying
-                                  ? "bg-yellow-400/15 text-yellow-200"
-                                  : "bg-white/5 text-slate-500"
-                            }`}
-                          >
-                            {isDone ? (
-                              <CheckCircle2 className="h-5 w-5" />
-                            ) : (
-                              <Server className={`h-5 w-5 ${isCurrent || isRetrying ? "animate-pulse" : ""}`} />
-                            )}
-                          </span>
-                          <div>
-                            <p className="text-sm font-black text-white">{check.label}</p>
-                            <p className="mt-0.5 text-xs text-slate-400">{check.description}</p>
-                          </div>
-                        </div>
-                        <span className="shrink-0 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          {isDone ? "Ready" : isCurrent || isRetrying ? "Checking" : "Queued"}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 px-4 py-3 text-xs leading-6 text-yellow-100">
-                {progress.retrying
-                  ? `Attempt ${progress.attempt || 1}: free servers may take a few seconds to wake up.`
-                  : "Live prices and product availability will be shown once startup checks pass."}
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-                  <div className="h-14 animate-pulse rounded-xl bg-white/10" />
-                  <div className="mt-3 h-2 animate-pulse rounded-full bg-white/10" />
-                  <div className="mt-2 h-2 w-2/3 animate-pulse rounded-full bg-white/10" />
-                </div>
-              ))}
-            </div>
-          </section>
+        <div className="mt-10 w-full max-w-xl">
+          <p className="text-2xl font-semibold text-white">{loadingText}</p>
+          <div className="mt-6 h-4 overflow-hidden rounded-full bg-white/15 shadow-inner">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 shadow-[0_0_22px_rgba(250,204,21,0.45)] transition-all duration-700"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <p className="mt-6 text-3xl font-semibold text-yellow-400">{percent}%</p>
+          <p className="mt-3 text-xs font-medium uppercase tracking-[0.28em] text-white/45">{statusText}</p>
         </div>
       </div>
     </div>
