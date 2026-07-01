@@ -138,7 +138,7 @@ export default function Home() {
 
         <section className="mt-6 soft-panel p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-950">Shop by Categories</h2>
+            <h2 className="text-lg font-black text-slate-950">All Categories</h2>
             <span className="text-xs font-bold text-slate-400">
             {loading ? "Loading..." : backendReady ? "Live API" : "Backend Offline"}
             </span>

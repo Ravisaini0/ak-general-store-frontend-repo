@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
+import { useStoreData } from "../../hooks/useStoreData";
 import SearchBar from "./SearchBar";
 
 export default function Header() {
   const { totalItems } = useCart();
   const { session, logout } = useAuth();
   const { wishlistItems } = useWishlist();
+  const { categories } = useStoreData();
 
   const scrollToTop = () => {
     if (typeof window !== "undefined") {
@@ -16,16 +18,20 @@ export default function Header() {
     }
   };
 
-  const menu = [
-    { label: "All Categories", to: "/products" },
+  const fallbackCategoryMenu = [
     { label: "Flour, Rice & Grains", to: "/category/aata" },
     { label: "Lentils & Pulses", to: "/category/dal" },
     { label: "Oil & Ghee", to: "/category/oil" },
     { label: "Spices & Seasoning", to: "/category/masala" },
     { label: "Biscuits & Snacks", to: "/category/snacks" },
     { label: "Daily Essentials", to: "/products" },
-    { label: "Fresh Flour Service", to: "/aata-chakki-booking" },
   ];
+  const categoryMenu = categories.length
+    ? categories.map((category) => ({
+        label: category.name,
+        to: `/category/${category.slug}`,
+      }))
+    : fallbackCategoryMenu;
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -123,7 +129,7 @@ export default function Header() {
             <Menu className="h-4 w-4" />
             All Categories
           </Link>
-          {menu.slice(1).map((item) => (
+          {categoryMenu.map((item) => (
             <Link
               key={item.label}
               to={item.to}
@@ -133,6 +139,13 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
+          <Link
+            to="/aata-chakki-booking"
+            onClick={scrollToTop}
+            className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            Fresh Flour Service
+          </Link>
           <Link to="/offers" onClick={scrollToTop} className="shrink-0 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-500 md:ml-auto">
             Offers
           </Link>
