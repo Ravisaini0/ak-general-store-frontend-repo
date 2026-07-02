@@ -4,7 +4,6 @@ const CORE_ENDPOINTS = [
   { key: "health", label: "Backend", path: "/api/health", timeoutMs: 20000 },
   { key: "settings", label: "Store settings", path: "/api/store/settings", timeoutMs: 25000 },
   { key: "categories", label: "Categories", path: "/api/categories", timeoutMs: 30000 },
-  { key: "products", label: "Products", path: "/api/products/page?page=1&size=1", timeoutMs: 30000 },
 ];
 
 function wait(ms) {
