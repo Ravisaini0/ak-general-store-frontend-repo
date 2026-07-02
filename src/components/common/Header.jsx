@@ -10,7 +10,7 @@ export default function Header() {
   const { totalItems } = useCart();
   const { session, logout } = useAuth();
   const { wishlistItems } = useWishlist();
-  const { categories } = useStoreData();
+  const { categories } = useStoreData({ includeProducts: false });
 
   const scrollToTop = () => {
     if (typeof window !== "undefined") {

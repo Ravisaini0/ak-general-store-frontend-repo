@@ -3,6 +3,8 @@ import {
   BadgeCheck,
   Clock3,
   CreditCard,
+  ChevronLeft,
+  ChevronRight,
   IndianRupee,
   ShieldCheck,
   Truck,
@@ -18,13 +20,32 @@ import CategoryCard from "../components/product/CategoryCard";
 import ProductGrid from "../components/product/ProductGrid";
 import { usePublicStoreSettings } from "../hooks/usePublicStoreSettings";
 import { useStoreData } from "../hooks/useStoreData";
+import { fetchProductPage } from "../services/productService";
+
+function getPaginationNumbers(currentPage, totalPages) {
+  return Array.from(
+    new Set([1, currentPage - 1, currentPage, currentPage + 1, totalPages])
+  ).filter((page) => page >= 1 && page <= totalPages);
+}
 
 export default function Home() {
-  const { categories, products, loading, error, backendReady } = useStoreData();
+  const { categories, loading, error, backendReady } = useStoreData({ includeProducts: false });
   const { freeDeliveryThreshold } = usePublicStoreSettings();
   const categoryRailRef = useRef(null);
   const [categoryRailPaused, setCategoryRailPaused] = useState(false);
-  const bestSelling = products.slice(0, 6);
+  const [productPage, setProductPage] = useState(1);
+  const productsPerPage = Math.max(1, categories.length || 6);
+  const [productPageData, setProductPageData] = useState({
+    products: [],
+    page: 1,
+    totalPages: 1,
+    totalItems: 0,
+  });
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState("");
+  const totalProductPages = Math.max(1, Number(productPageData.totalPages || 1));
+  const safeProductPage = Math.min(productPage, totalProductPages);
+  const paginationNumbers = getPaginationNumbers(safeProductPage, totalProductPages);
   const heroImage =
     "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80";
 
@@ -49,6 +70,46 @@ export default function Home() {
 
     return () => window.clearInterval(intervalId);
   }, [categories.length, categoryRailPaused]);
+
+  useEffect(() => {
+    setProductPage(1);
+  }, [categories.length]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProductPage() {
+      try {
+        setProductsLoading(true);
+        setProductsError("");
+        const data = await fetchProductPage({
+          page: productPage,
+          size: productsPerPage,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        setProductPageData(data);
+      } catch (loadError) {
+        if (!cancelled) {
+          setProductPageData({ products: [], page: 1, totalPages: 1, totalItems: 0 });
+          setProductsError(loadError.message || "Products could not be loaded.");
+        }
+      } finally {
+        if (!cancelled) {
+          setProductsLoading(false);
+        }
+      }
+    }
+
+    loadProductPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [productPage, productsPerPage]);
 
   return (
     <div className="page-shell">
@@ -167,13 +228,73 @@ export default function Home() {
         </section>
 
         <section className="mt-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-black text-slate-950">Best Selling Products</h2>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-xl font-black text-slate-950">Products</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                First page shows one product from each category. Use next pages for more items.
+              </p>
+            </div>
             <span className="text-xs font-bold text-slate-400">
-            {backendReady ? "Live Catalog" : "Unavailable"}
+              {productsLoading ? "Loading products..." : `Page ${safeProductPage} of ${totalProductPages}`}
             </span>
           </div>
-          <ProductGrid products={bestSelling} />
+          {productsError ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {productsError}
+            </div>
+          ) : productsLoading ? (
+            <div className="grid grid-fit gap-4 sm:gap-6">
+              {Array.from({ length: productsPerPage }).map((_, index) => (
+                <div key={index} className="h-72 animate-pulse rounded-[1.5rem] border border-slate-200 bg-white" />
+              ))}
+            </div>
+          ) : (
+            <ProductGrid products={productPageData.products || []} />
+          )}
+          {totalProductPages > 1 ? (
+            <div className="mt-6 flex flex-col gap-3 rounded-[1.35rem] border border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={safeProductPage <= 1}
+                onClick={() => setProductPage((page) => Math.max(1, page - 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {paginationNumbers.map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    className={`h-10 min-w-10 rounded-xl px-3 text-sm font-black ${
+                      pageNumber === safeProductPage
+                        ? "bg-yellow-400 text-slate-950"
+                        : "border border-slate-200 bg-white text-slate-700"
+                    }`}
+                    onClick={() => setProductPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+                <span className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500">
+                  Total {totalProductPages}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={safeProductPage >= totalProductPages}
+                onClick={() => setProductPage((page) => Math.min(totalProductPages, page + 1))}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
         </section>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

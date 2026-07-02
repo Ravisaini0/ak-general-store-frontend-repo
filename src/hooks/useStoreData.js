@@ -3,6 +3,7 @@ import { fetchCategories, fetchProducts } from "../services/productService";
 
 export function useStoreData(options = {}) {
   const search = options.search || "";
+  const includeProducts = options.includeProducts !== false;
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ export function useStoreData(options = {}) {
       try {
         const [categoriesResponse, productsResponse] = await Promise.all([
           fetchCategories(),
-          fetchProducts({ search }),
+          includeProducts ? fetchProducts({ search }) : Promise.resolve([]),
         ]);
 
         if (cancelled) {
@@ -47,7 +48,7 @@ export function useStoreData(options = {}) {
     return () => {
       cancelled = true;
     };
-  }, [search]);
+  }, [includeProducts, search]);
 
   return useMemo(
     () => ({

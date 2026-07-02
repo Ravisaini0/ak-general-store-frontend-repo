@@ -17,6 +17,19 @@ export async function fetchProducts(options = {}) {
   return (response.data || []).map(mapProduct);
 }
 
+export async function fetchProductPage(options = {}) {
+  const params = new URLSearchParams();
+  params.set("page", String(options.page || 1));
+  params.set("size", String(options.size || 8));
+
+  const response = await apiFetch(`/api/products/page?${params.toString()}`);
+  const data = response.data || {};
+  return {
+    ...data,
+    products: (data.products || []).map(mapProduct),
+  };
+}
+
 export async function fetchProductById(id) {
   const response = await apiFetch(`/api/products/${id}`);
   return mapProduct(response.data);
