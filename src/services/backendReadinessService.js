@@ -1,10 +1,10 @@
 import { API_BASE_URL } from "./api";
 
 const CORE_ENDPOINTS = [
-  { key: "health", label: "Backend", path: "/api/health" },
-  { key: "settings", label: "Store settings", path: "/api/store/settings" },
-  { key: "categories", label: "Categories", path: "/api/categories" },
-  { key: "products", label: "Products", path: "/api/products" },
+  { key: "health", label: "Backend", path: "/api/health", timeoutMs: 20000 },
+  { key: "settings", label: "Store settings", path: "/api/store/settings", timeoutMs: 25000 },
+  { key: "categories", label: "Categories", path: "/api/categories", timeoutMs: 30000 },
+  { key: "products", label: "Products", path: "/api/products", timeoutMs: 45000 },
 ];
 
 function wait(ms) {
@@ -47,7 +47,7 @@ export async function checkBackendReadiness(onProgress) {
       total: CORE_ENDPOINTS.length,
     });
 
-    const payload = await fetchJsonWithTimeout(endpoint.path);
+    const payload = await fetchJsonWithTimeout(endpoint.path, endpoint.timeoutMs);
     results.push({
       ...endpoint,
       payload,
