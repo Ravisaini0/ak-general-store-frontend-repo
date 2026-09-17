@@ -6,6 +6,22 @@ const CORE_ENDPOINTS = [
   { key: "categories", label: "Categories", path: "/api/categories", timeoutMs: 30000 },
 ];
 
+const BOOTSTRAP_CACHE_KEY = "__AK_STORE_BOOTSTRAP_CACHE__";
+
+function rememberBootstrapPayload(path, payload) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window[BOOTSTRAP_CACHE_KEY] = {
+    ...(window[BOOTSTRAP_CACHE_KEY] || {}),
+    [path]: {
+      payload,
+      savedAt: Date.now(),
+    },
+  };
+}
+
 function wait(ms) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -47,6 +63,7 @@ export async function checkBackendReadiness(onProgress) {
     });
 
     const payload = await fetchJsonWithTimeout(endpoint.path, endpoint.timeoutMs);
+    rememberBootstrapPayload(endpoint.path, payload);
     results.push({
       ...endpoint,
       payload,

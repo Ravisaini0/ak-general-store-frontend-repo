@@ -10,7 +10,7 @@ export default function BackendReadinessGate({ children }) {
   const [progress, setProgress] = useState({
     currentLabel: "Backend",
     completed: 0,
-    total: 4,
+    total: 3,
     attempt: 1,
     retrying: false,
     message: "Connecting to AK General Store...",

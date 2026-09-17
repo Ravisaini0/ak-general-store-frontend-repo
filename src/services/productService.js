@@ -1,9 +1,56 @@
 import { mapCategory, mapProduct } from "../utils/storeMappers";
 import { API_BASE_URL, apiFetch } from "./api";
 
+const CATEGORIES_PATH = "/api/categories";
+const BOOTSTRAP_CACHE_KEY = "__AK_STORE_BOOTSTRAP_CACHE__";
+const CACHE_TTL_MS = 60 * 1000;
+
+let categoriesCache = null;
+let categoriesPromise = null;
+
+function getBootstrappedCategories() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const cached = window[BOOTSTRAP_CACHE_KEY]?.[CATEGORIES_PATH];
+  if (!cached || Date.now() - cached.savedAt > CACHE_TTL_MS) {
+    return null;
+  }
+
+  return cached.payload?.data || null;
+}
+
 export async function fetchCategories() {
-  const response = await apiFetch("/api/categories");
-  return (response.data || []).map(mapCategory);
+  const bootstrappedCategories = getBootstrappedCategories();
+  if (bootstrappedCategories) {
+    categoriesCache = {
+      data: bootstrappedCategories,
+      savedAt: Date.now(),
+    };
+    return (bootstrappedCategories || []).map(mapCategory);
+  }
+
+  if (categoriesCache && Date.now() - categoriesCache.savedAt <= CACHE_TTL_MS) {
+    return (categoriesCache.data || []).map(mapCategory);
+  }
+
+  if (!categoriesPromise) {
+    categoriesPromise = apiFetch(CATEGORIES_PATH)
+      .then((response) => {
+        categoriesCache = {
+          data: response.data || [],
+          savedAt: Date.now(),
+        };
+        return categoriesCache.data;
+      })
+      .finally(() => {
+        categoriesPromise = null;
+      });
+  }
+
+  const categories = await categoriesPromise;
+  return (categories || []).map(mapCategory);
 }
 
 export async function fetchProducts(options = {}) {
