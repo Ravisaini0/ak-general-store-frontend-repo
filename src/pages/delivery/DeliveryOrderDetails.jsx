@@ -184,6 +184,15 @@ export default function DeliveryOrderDetails() {
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Order value</p>
                   <p className="mt-2 font-black text-slate-950">{formatMoney(order.totalAmount)}</p>
+                  <div className="mt-2 space-y-1 text-xs text-slate-500">
+                    <p>Items: {formatMoney(order.subtotalAmount || order.totalAmount)}</p>
+                    <p>Delivery: {Number(order.deliveryFee || 0) > 0 ? formatMoney(order.deliveryFee) : "Free"}</p>
+                    {Number(order.discountAmount || 0) > 0 ? (
+                      <p className="text-emerald-700">
+                        Coupon {order.couponCode ? `${order.couponCode}: ` : ""}- {formatMoney(order.discountAmount)}
+                      </p>
+                    ) : null}
+                  </div>
                   <p className="mt-1 text-sm text-slate-500">{formatOrderItems(order)}</p>
                 </div>
               </div>

@@ -51,6 +51,15 @@ export default function DeliveryOrderCard({ order, onAccept }) {
         </div>
         <div className="lg:text-right">
           <p className="font-black text-slate-950">{formatMoney(order.totalAmount || order.total)}</p>
+          <div className="mt-1 space-y-0.5 text-xs text-slate-500">
+            <p>Items: {formatMoney(order.subtotalAmount || order.totalAmount || order.total)}</p>
+            <p>Delivery: {Number(order.deliveryFee || 0) > 0 ? formatMoney(order.deliveryFee) : "Free"}</p>
+            {Number(order.discountAmount || 0) > 0 ? (
+              <p className="text-emerald-700">
+                Coupon {order.couponCode ? `${order.couponCode}: ` : ""}- {formatMoney(order.discountAmount)}
+              </p>
+            ) : null}
+          </div>
           <p className="mt-1 text-xs text-slate-500">{formatOrderItems(order)}</p>
           <p
             className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusTone(order.status)}`}

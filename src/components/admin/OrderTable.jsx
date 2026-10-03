@@ -12,6 +12,24 @@ function formatMoney(value) {
   return `Rs.${Number(value || 0).toFixed(0)}`;
 }
 
+function OrderAmountBreakdown({ order }) {
+  const subtotal = Number(order.subtotalAmount || order.totalAmount || order.total || 0);
+  const deliveryFee = Number(order.deliveryFee || 0);
+  const discount = Number(order.discountAmount || 0);
+
+  return (
+    <div className="mt-1 space-y-0.5 text-xs font-medium text-slate-500">
+      <p>Items: {formatMoney(subtotal)}</p>
+      {deliveryFee > 0 ? <p>Delivery: {formatMoney(deliveryFee)}</p> : <p>Delivery: Free</p>}
+      {discount > 0 ? (
+        <p className="text-emerald-700">
+          Coupon {order.couponCode ? `${order.couponCode}: ` : ""}- {formatMoney(discount)}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function getStatusTone(status) {
   switch (status) {
     case "ORDER_PLACED":
@@ -77,6 +95,7 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
                 <p className="font-black text-slate-950">
                   {formatMoney(order.totalAmount || order.total)}
                 </p>
+                <OrderAmountBreakdown order={order} />
                 <p className="mt-1 text-sm text-slate-500">
                   {order.paymentMode || order.paymentType}
                 </p>
@@ -201,7 +220,8 @@ export default function OrderTable({ orders, onConfirm, onAssign }) {
                   </p>
                 </td>
                 <td className="px-4 py-4 font-semibold text-slate-950">
-                  {formatMoney(order.totalAmount || order.total)}
+                  <p>{formatMoney(order.totalAmount || order.total)}</p>
+                  <OrderAmountBreakdown order={order} />
                 </td>
                 <td className="px-4 py-4 text-slate-700">
                   <p className="font-semibold text-slate-900">
